@@ -40,7 +40,7 @@ public:
             data_[i] = init_val;
     }
 
-    template <typename Iter>
+    template <std::input_iterator Iter>
     Sq_Matrix (const size_t size, Iter begin, Iter end) : data_ {new T[size * size]}, size_{size}
     {
         auto i = 0;
