@@ -5,19 +5,20 @@
 #include <iostream>
 #include <cstring>    // for std::memcmp
 
-namespace Matrix
+namespace Linear_Algebra
 {
 
 template <typename T>
 concept arithmetic = std::is_arithmetic<T>::value;
 
 template <arithmetic T>
-class Sq_Matrix final
+class Matrix final
 {
     using size_t = std::size_t;
     
     T *data_;
-    size_t size_;
+    size_t n_rows_;
+    size_t n_cols_;
 
     struct Proxy_Row
     {        
@@ -32,19 +33,20 @@ public:
     // Constructors
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Sq_Matrix (const size_t size, const T init_val = T{})
-              : data_{new T[size * size]}, size_{size}
+    Matrix (const size_t n_rows, const size_t n_cols, const T init_val = T{})
+              : data_{new T[n_rows * n_cols]}, n_rows_{n_rows}, n_cols_{n_cols}
     {
-        const auto n_elems = size * size;
+        const auto n_elems = n_rows * n_cols;
         for (auto i = 0; i != n_elems; ++i)
             data_[i] = init_val;
     }
 
     template <std::input_iterator Iter>
-    Sq_Matrix (const size_t size, Iter begin, Iter end) : data_ {new T[size * size]}, size_{size}
+    Matrix (const size_t n_rows, const size_t n_cols, Iter begin, Iter end)
+              : data_ {new T[n_rows * n_cols]}, n_rows_{n_rows}, n_cols_{n_cols}
     {
         auto i = 0;
-        const auto n_elems = size * size;
+        const auto n_elems = n_rows * n_cols;
         for (auto iter = begin; iter != end && i != n_elems; ++iter, ++i)
             data_[i] = *iter;
 
@@ -52,41 +54,48 @@ public:
             data_[i++] = T{};
     }
 
-    Sq_Matrix (const Sq_Matrix &rhs) : data_{new T[rhs.size_ * rhs.size_]}, size_{rhs.size_}
+    Matrix (const Matrix &rhs) : data_{new T[rhs.n_rows_ * rhs.n_cols_]}, 
+                                       n_rows_{rhs.n_rows_}, n_cols_{rhs.n_cols_}
     {
-        std::copy (rhs.data_, rhs.data_ + size_ * size_, data_);
+        std::copy (rhs.data_, rhs.data_ + n_rows_ * n_cols_, data_);
     }
 
-    Sq_Matrix &operator= (const Sq_Matrix &rhs)
+    Matrix &operator= (const Matrix &rhs)
     {   
         if (this == &rhs)
             return *this;
 
-        size_ = rhs.size_;
+        n_rows_ = rhs.size_;
+        n_cols_ = rhs.n_cols_;
         delete[] data_;
-        data_ = new T[size_ * size_];
-        std::copy (rhs.data_, rhs.data_ + size_ * size_, data_);
+        data_ = new T[n_rows_ * n_cols_];
+        std::copy (rhs.data_, rhs.data_ + n_rows_ * n_cols_, data_);
 
         return *this;
     }
 
-    Sq_Matrix (Sq_Matrix &&rhs) noexcept
-              : data_{std::exchange (rhs.data_, nullptr)}, size_{std::move (rhs.size_)} {}
+    Matrix (Matrix &&rhs) noexcept
+              : data_{std::exchange (rhs.data_, nullptr)}, 
+                n_rows_{std::move (rhs.n_rows_)},
+                n_cols_{std::move (rhs.n_cols_)}
+    {}
 
-    Sq_Matrix &operator= (Sq_Matrix &&rhs) noexcept
+    Matrix &operator= (Matrix &&rhs) noexcept
     {
         if (this == &rhs)
             return *this;
 
-        delete[] rhs.data_;
+        delete[] data_;
         data_ = std::move (rhs.data_);
         rhs.data_ = nullptr;
-        size_ = std::move (rhs.size_);
+
+        n_rows_ = std::move (rhs.n_rows_);
+        n_cols_ = std::move (rhs.n_cols_);
 
         return *this;
     }
 
-    ~Sq_Matrix () { delete[] data_; }
+    ~Matrix () { delete[] data_; }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -96,26 +105,34 @@ public:
     const T *data () const noexcept { return data_; }
     T *data () noexcept { return data_; }
 
-    auto size () const noexcept { return size_; }
+    auto n_cols () const noexcept { return n_cols_; }
+    auto n_rows () const noexcept { return n_rows_; }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // Elements access
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    const Proxy_Row operator[] (size_t row_i) const { return Proxy_Row {data_ + row_i * size_}; }
-    Proxy_Row operator[] (size_t row_i) { return Proxy_Row {data_ + row_i * size_}; }
+    const Proxy_Row operator[] (const size_t row_i) const
+    {
+        return Proxy_Row {data_ + row_i * n_cols_};
+    }
+
+    Proxy_Row operator[] (const size_t row_i)
+    {
+        return Proxy_Row {data_ + row_i * n_cols_};
+    }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // Some convenient methods
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Sq_Matrix &transpose () &
+    Matrix transpose () const
     {
-        for (auto i = 0; i != size_; ++i)
-            for (auto j = 0; j != size_; ++j)
-                std::swap (*this[i][j], *this[j][i]);
+        for (auto i = 0; i != n_rows_; ++i)
+            for (auto j = 0; j != n_cols_; ++j)
+                std::swap (data_[i * n_cols_ + j], data_[j * n_cols_ + i]);
     }
 
     T determinant () const
@@ -132,27 +149,28 @@ public:
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    static Sq_Matrix identity_matrix (const size_t size)
+    static Matrix identity_matrix (const size_t n_rows, const size_t n_cols)
     {
-        Sq_Matrix<T> res {size};
-        for (auto diag_elem = 0; diag_elem < size; diag_elem++)
-            res.data_[diag_elem * (size + 1)] = static_cast<T>(1);
+        Matrix<T> res {n_rows, n_cols};
+        auto min_size = std::min (n_rows, n_cols);
+        for (auto diag_i = 0; diag_i < min_size; diag_i++)
+            res.data_[diag_i * (n_cols + 1)] = T{1};
 
         return res;
     }
 
     void dump (std::ostream &os) const
     {
-        for (auto i = 0; i != size_; ++i)
+        for (auto i = 0; i != n_cols_; ++i)
         {
-            for (auto j = 0; j != size_; ++j)
-                os << data_[i * size_ + j] << " ";
+            for (auto j = 0; j != n_rows_; ++j)
+                os << data_[i * n_cols_ + j] << " ";
             os << std::endl;
         }
     }
 
 private:
-
+#if 0
     T gauss_algorithm ()
     {     
         auto exchanges = 0;
@@ -252,29 +270,30 @@ private:
 
         return (exchanges % 2) ? -determinant : determinant;
     } 
+    #endif
 };
 
 template <typename T>
-static bool operator== (const Sq_Matrix<T> &lhs, const Sq_Matrix<T> &rhs)
+static bool operator== (const Matrix<T> &lhs, const Matrix<T> &rhs)
 {
     if (&lhs == &rhs)
         return true;
-    else if (lhs.size() != rhs.size())
+    else if (lhs.n_rows() != rhs.n_rows() || lhs.n_cols() != rhs.n_cols())
         return false;
     else
-        return std::memcmp (lhs.data(), rhs.data(), lhs.size() * lhs.size() * sizeof (T)) == 0;
+        return std::memcmp (lhs.data(), rhs.data(), lhs.n_rows() * lhs.n_cols() * sizeof (T)) == 0;
 }
 
 template <typename T>
-bool operator!= (const Sq_Matrix<T> &lhs, const Sq_Matrix<T> &rhs) { return !(lhs == rhs); }
+bool operator!= (const Matrix<T> &lhs, const Matrix<T> &rhs) { return !(lhs == rhs); }
 
 template <typename T>
-std::ostream &operator<< (std::ostream &os, const Sq_Matrix<T> &matrix)
+std::ostream &operator<< (std::ostream &os, const Matrix<T> &matrix)
 {
     matrix.dump(os);
     return os;
 }
 
-} // namespace Matrix
+} // namespace Linear_Algebra
 
 #endif // INCLUDE_MATRIX_HPP
