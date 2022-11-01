@@ -8,10 +8,26 @@
 namespace Linear_Algebra
 {
 
-template <typename T>
-concept arithmetic = std::is_arithmetic<T>::value;
+namespace cmp
+{
 
-template <arithmetic T>
+constexpr double epsilon = 1e-6;
+
+inline bool are_equal (const double first, const double second,
+                       const double zero_diff = epsilon,
+                       const double rel_diff  = epsilon)
+{
+    auto diff = std::abs (first - second);
+
+    if (diff < zero_diff)
+        return true;
+    else
+        return (diff < std::max (std::abs (first), std::abs (second)) * rel_diff);
+}
+
+} // namespace cmp
+
+template <typename T> requires std::is_arithmetic<T>::value 
 class Matrix final
 {
     using size_t = std::size_t;
@@ -65,7 +81,7 @@ public:
         if (this == &rhs)
             return *this;
 
-        n_rows_ = rhs.size_;
+        n_rows_ = rhs.n_rows_;
         n_cols_ = rhs.n_cols_;
         delete[] data_;
         data_ = new T[n_rows_ * n_cols_];
@@ -128,23 +144,20 @@ public:
     // Some convenient methods
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Matrix transpose () const
+    Matrix &transpose ()
     {
-        for (auto i = 0; i != n_rows_; ++i)
-            for (auto j = 0; j != n_cols_; ++j)
-                std::swap (data_[i * n_cols_ + j], data_[j * n_cols_ + i]);
+        std::swap (n_rows_, n_cols_);
+
+        return *this;
     }
 
     T determinant () const
     {
+        if (n_cols_ != n_rows_)
+            throw std::runtime_error ("Determinant is only defined for square matrices");
+        
         auto copy = *this;
-
-        //return copy.gauss_algorithm ();
-
-        if (std::is_integral<T>::value)
-            return copy.bareiss_algorithm ();
-        else
-            return copy.gauss_algorithm ();
+        return copy.algorithm ();
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -170,107 +183,117 @@ public:
     }
 
 private:
-#if 0
-    T gauss_algorithm ()
-    {     
+
+    // Gauss algorithm
+    T algorithm () requires std::is_floating_point<T>::value
+    {
         auto exchanges = 0;
+        
+        size_t row_i {};
+        size_t col_i {};
 
-        std::cout << *this << std::endl;
-
-        for (auto step = 0; step != size_ - 1; ++step)
+        while (row_i < n_rows_ && col_i < n_cols_)
         {
-            auto row_i = step;
+            const auto [pivot_pos, pivot] = find_pivot (row_i, col_i);
 
-            for (; row_i != size_; ++row_i)
-                if (data_[row_i * size_ + step] != T{})
-                    break;
-
-            if (row_i == size_)
-                return T{};
-            else if (row_i != step)
+            if (pivot == T{})
+                return pivot;
+            else
             {
-                swap_rows (step, row_i);
-                exchanges++;
-            }
-
-            std::cout << *this << std::endl;
-
-            auto leader = data_[step * (size_ + 1)];
-            for (auto row_i = step + 1; row_i != size_; ++row_i)
-            {
-                auto coeff = -data_[row_i * size_ + step] / leader;
+                if (row_i != pivot_pos)
+                {
+                    swap_rows (row_i, pivot_pos);
+                    exchanges++;
+                }
                 
-                data_[row_i * size_ + step] = T{};
-                for (auto column_i = step + 1; column_i != size_; ++column_i)
-                    data_[row_i * size_ + column_i] += coeff * data_[step * size_ + column_i];
-            }
+                for (auto i = row_i + 1; i != n_cols_; ++i)
+                {
+                    auto coeff = data_[i * n_cols_ + col_i] / data_[row_i * n_cols_ + col_i];
+                    data_[i * n_cols_ + col_i] = T{};
 
-            std::cout << *this << std::endl;
+                    for (auto j = col_i + 1; j != n_rows_; ++j)
+                        data_[i * n_cols_ + j] -= data_[row_i * n_cols_ + j] * coeff;
+                }
+
+                row_i++;
+                col_i++;
+            }
         }
 
         T determinant = data_[0];
-        for (auto i = 1; i != size_; ++i)
-            determinant *= data_[i * (size_ + 1)];
+        for (auto diag_i = 1; diag_i != n_cols_; ++diag_i)
+            determinant *= data_[diag_i * (n_cols_ + 1)];
+
+        if (cmp::are_equal (determinant, 0.0))
+            determinant = 0.0;
 
         return (exchanges % 2) ? -determinant : determinant;
+    }
+
+    // Bareiss algorithm
+    T algorithm () requires std::is_integral<T>::value
+    {
+        auto exchanges = 0;
+        
+        T init_val {1};
+
+        for (auto row_i = 0; row_i != n_rows_ - 1; ++row_i)
+        {
+            auto [pivot_pos, pivot] = find_pivot (row_i, row_i);
+
+            if (pivot == T{})
+                return pivot;
+            else
+            {
+                if (row_i != pivot_pos)
+                {
+                    swap_rows (row_i, pivot_pos);
+                    exchanges++;
+                }
+
+                const auto value_1 = data_[row_i * (n_cols_ + 1)];
+
+                for (auto i = row_i + 1; i != n_cols_; ++i)
+                {
+                    const auto value_2 = data_[i * n_cols_ + row_i];   
+                    data_[i * n_cols_ + row_i] = T{};
+
+                    for (auto j = row_i + 1; j != n_rows_; j++)
+                        data_[i * n_cols_ + j] = (data_[i * n_cols_ + j]     * value_1 - 
+                                                  data_[row_i * n_cols_ + j] * value_2) / init_val;
+                }
+
+                init_val = value_1;
+            }
+        }
+
+        auto determinant = data_[n_cols_ * n_cols_ - 1];
+
+        return (exchanges % 2) ? -determinant : determinant;
+    }
+
+    std::pair<size_t, T> find_pivot (const size_t begin_row, const size_t col) const
+    {
+        std::pair<size_t, T> pivot {begin_row, data_[begin_row * n_cols_ + col]};
+
+        for (auto row_i = begin_row + 1; row_i != n_rows_; ++row_i)
+        {
+            auto elem = data_[row_i * n_cols_ + col];
+            if (std::abs (pivot.second) < std::abs (elem))
+            {
+                pivot.first  = row_i;
+                pivot.second = elem;
+            }
+        }
+    
+        return pivot;
     }
 
     void swap_rows (const size_t row_1, const size_t row_2)
     {
-        for (auto column_i = 0; column_i != size_; ++column_i)
-            std::swap (data_[row_1 * size_ + column_i], data_[row_2 * size_ + column_i]);
+        for (auto col_i = 0; col_i != n_cols_; ++col_i)
+            std::swap (data_[row_1 * n_cols_ + col_i], data_[row_2 * n_cols_ + col_i]);
     }
-
-    T bareiss_algorithm ()
-    {
-        T init_val {1};
-        auto exchanges = 0;
-
-        for (auto l_1 = 0; l_1 != size_ - 1; ++l_1)
-        {
-            auto max_n = l_1;
-            auto max_value = abs (data_[l_1 * (size_ + 1)]);
-
-            for (auto l_2 = l_1 + 1; l_2 != size_; ++l_2)
-            {
-                const auto value = abs (data_[l_2 * size_ + l_2]);
-                if (value > max_value)
-                {
-                    max_n = l_2;
-                    max_value = value;
-                }
-            }
-
-            if (max_n > l_1)
-            {
-                swap_rows (l_1, max_n);
-                exchanges++;
-            }
-            else
-            {
-                if (max_value == T{})
-                    return max_value;
-            }
-
-            const auto value_1 = data_[l_1 * (size_ + 1)];
-
-            for (auto l_2 = l_1 + 1; l_2 != size_; ++l_2)
-            {
-                const auto value_2 = data_[l_2 * size_ + l_1];
-                
-                data_[l_2 * size_ + l_1] = T{};
-                for (auto c = l_1 + 1; c != size_; c++)
-                    data_[l_2 * size_ + c] = (data_[l_2 * size_ + c] * value_1 - data_[l_1 * size_ + c] * value_2) / init_val;
-            }
-
-            init_val = value_1;
-        }
-
-        auto determinant = data_[size_ * size_ - 1];
-
-        return (exchanges % 2) ? -determinant : determinant;
-    } 
-    #endif
 };
 
 template <typename T>
