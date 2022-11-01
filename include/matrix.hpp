@@ -120,7 +120,14 @@ public:
 
     T determinant () const
     {
-        // coming soon
+        auto copy = *this;
+
+        //return copy.gauss_algorithm ();
+
+        if (std::is_integral<T>::value)
+            return copy.bareiss_algorithm ();
+        else
+            return copy.gauss_algorithm ();
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -143,6 +150,108 @@ public:
             os << std::endl;
         }
     }
+
+private:
+
+    T gauss_algorithm ()
+    {     
+        auto exchanges = 0;
+
+        std::cout << *this << std::endl;
+
+        for (auto step = 0; step != size_ - 1; ++step)
+        {
+            auto row_i = step;
+
+            for (; row_i != size_; ++row_i)
+                if (data_[row_i * size_ + step] != T{})
+                    break;
+
+            if (row_i == size_)
+                return T{};
+            else if (row_i != step)
+            {
+                swap_rows (step, row_i);
+                exchanges++;
+            }
+
+            std::cout << *this << std::endl;
+
+            auto leader = data_[step * (size_ + 1)];
+            for (auto row_i = step + 1; row_i != size_; ++row_i)
+            {
+                auto coeff = -data_[row_i * size_ + step] / leader;
+                
+                data_[row_i * size_ + step] = T{};
+                for (auto column_i = step + 1; column_i != size_; ++column_i)
+                    data_[row_i * size_ + column_i] += coeff * data_[step * size_ + column_i];
+            }
+
+            std::cout << *this << std::endl;
+        }
+
+        T determinant = data_[0];
+        for (auto i = 1; i != size_; ++i)
+            determinant *= data_[i * (size_ + 1)];
+
+        return (exchanges % 2) ? -determinant : determinant;
+    }
+
+    void swap_rows (const size_t row_1, const size_t row_2)
+    {
+        for (auto column_i = 0; column_i != size_; ++column_i)
+            std::swap (data_[row_1 * size_ + column_i], data_[row_2 * size_ + column_i]);
+    }
+
+    T bareiss_algorithm ()
+    {
+        T init_val {1};
+        auto exchanges = 0;
+
+        for (auto l_1 = 0; l_1 != size_ - 1; ++l_1)
+        {
+            auto max_n = l_1;
+            auto max_value = abs (data_[l_1 * (size_ + 1)]);
+
+            for (auto l_2 = l_1 + 1; l_2 != size_; ++l_2)
+            {
+                const auto value = abs (data_[l_2 * size_ + l_2]);
+                if (value > max_value)
+                {
+                    max_n = l_2;
+                    max_value = value;
+                }
+            }
+
+            if (max_n > l_1)
+            {
+                swap_rows (l_1, max_n);
+                exchanges++;
+            }
+            else
+            {
+                if (max_value == T{})
+                    return max_value;
+            }
+
+            const auto value_1 = data_[l_1 * (size_ + 1)];
+
+            for (auto l_2 = l_1 + 1; l_2 != size_; ++l_2)
+            {
+                const auto value_2 = data_[l_2 * size_ + l_1];
+                
+                data_[l_2 * size_ + l_1] = T{};
+                for (auto c = l_1 + 1; c != size_; c++)
+                    data_[l_2 * size_ + c] = (data_[l_2 * size_ + c] * value_1 - data_[l_1 * size_ + c] * value_2) / init_val;
+            }
+
+            init_val = value_1;
+        }
+
+        auto determinant = data_[size_ * size_ - 1];
+
+        return (exchanges % 2) ? -determinant : determinant;
+    } 
 };
 
 template <typename T>
