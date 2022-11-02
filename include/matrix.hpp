@@ -172,7 +172,7 @@ public:
         return res;
     }
 
-    void dump (std::ostream &os) const
+    void dump (std::ostream &os = std::cout) const
     {
         for (auto i = 0; i != n_cols_; ++i)
         {
@@ -234,7 +234,7 @@ private:
     T algorithm () requires std::is_integral<T>::value
     {
         auto exchanges = 0;
-        
+
         T init_val {1};
 
         for (auto row_i = 0; row_i != n_rows_ - 1; ++row_i)
