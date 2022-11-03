@@ -118,8 +118,8 @@ public:
     // Fields access
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    const T *data () const noexcept { return data_; }
-    T *data () noexcept { return data_; }
+    const T *data () & const noexcept { return data_; }
+    T *data () & noexcept { return data_; }
 
     auto n_cols () const noexcept { return n_cols_; }
     auto n_rows () const noexcept { return n_rows_; }
