@@ -162,6 +162,32 @@ public:
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+    // Arithmetic operators
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Matrix &operator+= (const Matrix &rhs)
+    {
+        if (n_rows_ != rhs.n_rows_ || n_cols_ != rhs.n_cols)
+            throw std::runtime_error ("Sum of matrices of different size is not defined");
+
+        const auto size = n_cols_ * n_rows_;
+        for (auto i = 0; i != size; ++i)
+            data_[i] += rhs.data_[i];
+    }
+
+    Matrix &operator-= (const Matrix &rhs)
+    {
+        if (n_rows_ != rhs.n_rows_ || n_cols_ != rhs.n_cols)
+            throw std::runtime_error ("Difference of matrices of different size is not defined");
+
+        const auto size = n_cols_ * n_rows_;
+        for (auto i = 0; i != size; ++i)
+            data_[i] -= rhs.data_[i];
+    }
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     static Matrix identity_matrix (const size_t n_rows, const size_t n_cols)
     {
         Matrix<T> res {n_rows, n_cols};
@@ -315,6 +341,39 @@ std::ostream &operator<< (std::ostream &os, const Matrix<T> &matrix)
 {
     matrix.dump(os);
     return os;
+}
+
+template <typename T>
+Matrix<T> operator+ (const Matrix<T> &lhs, const Matrix<T> &rhs)
+{
+    auto sum = lhs;
+    return sum += rhs;
+}
+
+template <typename T>
+Matrix<T> operator- (const Matrix<T> &lhs, const Matrix<T> &rhs)
+{
+    auto diff = lhs;
+    return diff -= rhs;
+}
+
+template <typename T>
+Matrix<T> product (const Matrix<T> &lhs, const Matrix<T> &rhs)
+{
+    if (lhs.n_cols_ != rhs.n_rows_)
+        throw std::runtime_error ("Product of matrices of given sizes is undefined");
+
+    Matrix<T> product {lhs.n_rows_, rhs.n_cols_};
+    auto dim = lhs.n_cols_;
+
+    for (auto i = 0; i != lhs.n_rows_; ++i)
+    {
+        for (auto j = 0; j != rhs.n_cols_; ++j)
+        {
+            for (auto k = 0; k != dim; ++k)
+                product.data_[i * product.n_cols_ + j] += lhs.data_[i * dim + k] * rhs.data_[k * rhs.n_cols_ + j];
+        }
+    }
 }
 
 } // namespace Linear_Algebra
