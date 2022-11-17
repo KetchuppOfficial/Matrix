@@ -12,11 +12,11 @@ TEST (Constructors, Basic_Ctor)
     constexpr auto size = n_rows * n_cols;
     Matrix<int> m_1 {n_rows, n_cols};
     const int *arr_1 = new int[size]{};
-    EXPECT_TRUE (std::memcmp (m_1.data (), arr_1, sizeof (arr_1)) == 0);
+    EXPECT_TRUE (std::memcmp (m_1.data (), arr_1, size) == 0);
 
     Matrix<int> m_2 {3, 2, 7};
     const int arr_2[6] = {7, 7, 7, 7, 7, 7};
-    EXPECT_TRUE (std::memcmp (m_2.data (), arr_2, sizeof (arr_2)) == 0);
+    EXPECT_TRUE (std::memcmp (m_2.data (), arr_2, 6) == 0);
 
     #ifdef COMPILATION_FAIL
     struct S {};
