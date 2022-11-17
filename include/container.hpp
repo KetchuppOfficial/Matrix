@@ -14,10 +14,10 @@ template <typename T>
 void construct (T *ptr, T &&value) { new (ptr) T{std::move (value)}; }
 
 template <typename T>
-void destroy (T *ptr) { ptr->~T(); }
+void destroy (T *ptr) noexcept { ptr->~T(); }
 
 template <typename Fwd_Iter>
-void destroy (Fwd_Iter begin, Fwd_Iter end)
+void destroy (Fwd_Iter begin, Fwd_Iter end) noexcept
 {
     while (begin != end)
         destroy (std::addressof (*begin++));
