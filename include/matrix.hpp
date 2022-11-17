@@ -2,6 +2,7 @@
 #define INCLUDE_MATRIX_HPP
 
 #include <stdexcept>
+#include <initializer_list>
 #include <iostream>
 #include <cstring>    // for std::memcmp
 
@@ -46,6 +47,13 @@ struct Undef_Det : public Undef_Operation
     {};
 };
 
+struct Il_Il_Ctor_Fail : public std::runtime_error
+{
+    Il_Il_Ctor_Fail ()
+                    : std::runtime_error {"The quantity of elements in each row must be the same"}
+    {}
+};
+
 template <typename T> requires std::is_arithmetic<T>::value 
 class Matrix final
 {   
@@ -72,6 +80,22 @@ public:
         auto size = memory_.size();
         for (auto i = 0; i != size; ++i)
             memory_[i] = init_val;
+    }
+
+    Matrix (std::initializer_list<std::initializer_list<T>> il)
+           : memory_{il.size() * il.begin()->size()}, 
+             n_rows_{il.size()}, 
+             n_cols_{il.begin()->size()}
+    {
+        auto i = 0;
+        for (auto out_iter = il.begin(), o_end = il.end(); out_iter != o_end; ++out_iter)
+        {
+            if (out_iter->size() != n_cols_)
+                throw Il_Il_Ctor_Fail{};
+
+            for (auto in_iter = out_iter->begin(), i_end = out_iter->end(); in_iter != i_end; ++in_iter)
+                memory_[i++] = *in_iter;
+        }  
     }
 
     template <std::input_iterator Iter>
