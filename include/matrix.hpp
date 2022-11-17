@@ -124,10 +124,14 @@ public:
     // Some convenient methods
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Matrix &transpose ()
+    Matrix &transpose () &
     {
-        // NOT FINISHED YET
+        Matrix<T> transposed {n_cols_, n_rows_};
+        for (auto i = 0; i != n_rows_; ++i)
+            for (auto j = 0; j != n_cols_; ++j)
+                transposed.memory_[j * n_rows_ + i] = memory_[i * n_cols_ + j];
 
+        std::swap (*this, transposed);
         return *this;
     }
 
@@ -180,11 +184,14 @@ public:
 
     void dump (std::ostream &os = std::cout) const
     {
-        for (auto i = 0; i != n_cols_; ++i)
+        for (auto i = 0; i != n_rows_; ++i)
         {
-            for (auto j = 0; j != n_rows_; ++j)
+            for (auto j = 0; j != n_cols_ - 1; ++j)
                 os << memory_[i * n_cols_ + j] << " ";
-            os << std::endl;
+            os << memory_[i * n_cols_ + n_cols_ - 1];
+
+            if (i < n_rows_ - 1)
+                os << std::endl;
         }
     }
 
