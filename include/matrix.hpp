@@ -334,7 +334,7 @@ private:
 };
 
 template <typename T>
-static bool operator== (const Matrix<T> &lhs, const Matrix<T> &rhs)
+bool operator== (const Matrix<T> &lhs, const Matrix<T> &rhs)
 {
     if (&lhs == &rhs)
         return true;
