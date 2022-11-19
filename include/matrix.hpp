@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <initializer_list>
 #include <iostream>
+#include <algorithm>
 
 #include "container.hpp"
 #include "floating_point_comparison.hpp"
