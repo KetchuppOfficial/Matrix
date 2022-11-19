@@ -125,6 +125,8 @@ public:
     const T *data () const & { return memory_.data(); }
     T *data () & { return memory_.data(); }
 
+    auto size () const { return memory_.size(); }
+
     auto n_cols () const { return n_cols_; }
     auto n_rows () const { return n_rows_; }
 
@@ -165,7 +167,9 @@ public:
             throw Undef_Det {};
         
         auto copy = *this;
-        return copy.algorithm ();
+        auto det = copy.det_algorithm ();
+        
+        return det;
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -222,7 +226,7 @@ public:
 private:
 
     // Gauss algorithm
-    T algorithm () requires std::is_floating_point<T>::value
+    T det_algorithm () requires std::is_floating_point<T>::value
     {
         auto exchanges = 0;
         
@@ -268,7 +272,7 @@ private:
     }
 
     // Bareiss algorithm
-    T algorithm () requires std::is_integral<T>::value
+    T det_algorithm () requires std::is_integral<T>::value
     {
         auto exchanges = 0;
 
@@ -341,7 +345,7 @@ bool operator== (const Matrix<T> &lhs, const Matrix<T> &rhs)
     else if (lhs.n_rows() != rhs.n_rows() || lhs.n_cols() != rhs.n_cols())
         return false;
     else
-        return std::memcmp (lhs.data(), rhs.data(), lhs.n_rows() * lhs.n_cols() * sizeof (T)) == 0;
+        return std::equal (lhs.data(), lhs.data() + lhs.size(), rhs.data());
 }
 
 template <typename T>
