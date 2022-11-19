@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <initializer_list>
 #include <iostream>
-#include <cstring>    // for std::memcmp
 
 #include "container.hpp"
 #include "floating_point_comparison.hpp"
@@ -61,11 +60,15 @@ class Matrix final
     size_t n_rows_;
     size_t n_cols_;
 
-    struct Proxy_Row
+    struct const_Proxy_Row
     {        
-        T *row_;
-
+        const T *row_;
         const T& operator[] (size_t j) const { return row_[j]; }
+    };
+
+    struct Proxy_Row
+    {
+        T *row_;
         T& operator[] (size_t j) { return row_[j]; }
     };
 
@@ -77,8 +80,7 @@ public:
     Matrix (const size_t n_rows, const size_t n_cols, const T init_val = T{})
               : memory_{n_rows * n_cols}, n_rows_{n_rows}, n_cols_{n_cols}
     {
-        auto size = memory_.size();
-        for (auto i = 0; i != size; ++i)
+        for (auto i = 0; i != size(); ++i)
             memory_[i] = init_val;
     }
 
@@ -95,7 +97,7 @@ public:
 
             for (auto in_iter = out_iter->begin(), i_end = out_iter->end(); in_iter != i_end; ++in_iter)
                 memory_[i++] = *in_iter;
-        }  
+        }
     }
 
     template <std::input_iterator Iter>
@@ -103,12 +105,11 @@ public:
               : memory_{n_rows * n_cols}, n_rows_{n_rows}, n_cols_{n_cols}
     {
         auto i = 0;
-        const auto n_elems = memory_.size();
-        for (auto iter = begin; iter != end && i != n_elems; ++iter, ++i)
+        for (auto iter = begin; iter != end && i != size(); ++iter, ++i)
             memory_[i] = *iter;
 
-        while (i != n_elems)
-            memory_[i++] = T{};
+        for (; i != size(); ++i)
+            memory_[i] = T{};
     }
 
     Matrix (const Matrix &rhs) = default;
@@ -135,9 +136,9 @@ public:
     // Elements access
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    const Proxy_Row operator[] (const size_t row_i) const
+    const const_Proxy_Row operator[] (const size_t row_i) const
     {
-        return Proxy_Row {data() + row_i * n_cols_};
+        return const_Proxy_Row {data() + row_i * n_cols_};
     }
 
     Proxy_Row operator[] (const size_t row_i)
@@ -155,7 +156,7 @@ public:
         Matrix<T> transposed {n_cols_, n_rows_};
         for (auto i = 0; i != n_rows_; ++i)
             for (auto j = 0; j != n_cols_; ++j)
-                transposed.memory_[j * n_rows_ + i] = memory_[i * n_cols_ + j];
+                transposed[j][i] = (*this)[i][j];
 
         std::swap (*this, transposed);
         return *this;
@@ -167,7 +168,7 @@ public:
             throw Undef_Det {};
         
         auto copy = *this;
-        auto det = copy.det_algorithm ();
+        auto det  = copy.det_algorithm ();
         
         return det;
     }
@@ -183,8 +184,7 @@ public:
         if (n_rows_ != rhs.n_rows_ || n_cols_ != rhs.n_cols_)
             throw Undef_Sum {};
 
-        const auto size = memory_.size();
-        for (auto i = 0; i != size; ++i)
+        for (auto i = 0; i != size(); ++i)
             memory_[i] += rhs.memory_[i];
     }
 
@@ -193,8 +193,7 @@ public:
         if (n_rows_ != rhs.n_rows_ || n_cols_ != rhs.n_cols_)
             throw Undef_Diff {};
 
-        const auto size = memory_.size();
-        for (auto i = 0; i != size; ++i)
+        for (auto i = 0; i != size(); ++i)
             memory_[i] -= rhs.memory_[i];
     }
 
@@ -205,7 +204,7 @@ public:
         Matrix<T> res {n_rows, n_cols};
         auto min_size = std::min (n_rows, n_cols);
         for (auto diag_i = 0; diag_i < min_size; diag_i++)
-            res.memory_[diag_i * (n_cols + 1)] = T{1};
+            res[diag_i][diag_i] = T{1};
 
         return res;
     }
@@ -215,8 +214,8 @@ public:
         for (auto i = 0; i != n_rows_; ++i)
         {
             for (auto j = 0; j != n_cols_ - 1; ++j)
-                os << memory_[i * n_cols_ + j] << " ";
-            os << memory_[i * n_cols_ + n_cols_ - 1];
+                os << (*this)[i][j] << " ";
+            os << (*this)[i][n_cols_ - 1];
 
             if (i < n_rows_ - 1)
                 os << std::endl;
@@ -249,11 +248,11 @@ private:
                 
                 for (auto i = row_i + 1; i != n_cols_; ++i)
                 {
-                    auto coeff = memory_[i * n_cols_ + col_i] / memory_[row_i * n_cols_ + col_i];
-                    memory_[i * n_cols_ + col_i] = T{};
+                    auto coeff = (*this)[i][col_i] / (*this)[row_i][col_i];
+                    (*this)[i][col_i] = T{};
 
                     for (auto j = col_i + 1; j != n_rows_; ++j)
-                        memory_[i * n_cols_ + j] -= memory_[row_i * n_cols_ + j] * coeff;
+                        (*this)[i][j] -= (*this)[row_i][j] * coeff;
                 }
 
                 row_i++;
@@ -261,9 +260,9 @@ private:
             }
         }
 
-        T determinant = memory_[0];
+        T determinant = (*this)[0][0];
         for (auto diag_i = 1; diag_i != n_cols_; ++diag_i)
-            determinant *= memory_[diag_i * (n_cols_ + 1)];
+            determinant *= (*this)[diag_i][diag_i];
 
         if (cmp::are_equal (determinant, 0.0))
             determinant = 0.0;
@@ -292,34 +291,33 @@ private:
                     exchanges++;
                 }
 
-                const auto value_1 = memory_[row_i * (n_cols_ + 1)];
+                const auto value_1 = (*this)[row_i][row_i];
 
                 for (auto i = row_i + 1; i != n_cols_; ++i)
                 {
-                    const auto value_2 = memory_[i * n_cols_ + row_i];   
-                    memory_[i * n_cols_ + row_i] = T{};
+                    const auto value_2 = std::exchange ((*this)[i][row_i], T{});
 
                     for (auto j = row_i + 1; j != n_rows_; j++)
-                        memory_[i * n_cols_ + j] = (memory_[i * n_cols_ + j]     * value_1 - 
-                                                    memory_[row_i * n_cols_ + j] * value_2) / init_val;
+                        (*this)[i][j] = ((*this)[i][j] * value_1 - 
+                                         (*this)[row_i][j] * value_2) / init_val;
                 }
 
                 init_val = value_1;
             }
         }
 
-        auto determinant = memory_[n_cols_ * n_cols_ - 1];
+        auto determinant = (*this)[n_rows_ - 1][n_cols_ - 1];
 
         return (exchanges % 2) ? -determinant : determinant;
     }
 
     std::pair<size_t, T> find_pivot (const size_t begin_row, const size_t col) const
     {
-        std::pair<size_t, T> pivot {begin_row, memory_[begin_row * n_cols_ + col]};
+        std::pair<size_t, T> pivot {begin_row, (*this)[begin_row][col]};
 
         for (auto row_i = begin_row + 1; row_i != n_rows_; ++row_i)
         {
-            auto elem = memory_[row_i * n_cols_ + col];
+            auto elem = (*this)[row_i][col];
             if (std::abs (pivot.second) < std::abs (elem))
             {
                 pivot.first  = row_i;
@@ -332,8 +330,7 @@ private:
 
     void swap_rows (const size_t row_1, const size_t row_2)
     {
-        for (auto col_i = 0; col_i != n_cols_; ++col_i)
-            std::swap (memory_[row_1 * n_cols_ + col_i], memory_[row_2 * n_cols_ + col_i]);
+        std::swap_ranges (&(*this)[row_1][0], &(*this)[row_1][n_cols_], &(*this)[row_2][0]);
     }
 };
 
@@ -375,21 +372,22 @@ Matrix<T> operator- (const Matrix<T> &lhs, const Matrix<T> &rhs)
 template <typename T>
 Matrix<T> product (const Matrix<T> &lhs, const Matrix<T> &rhs)
 {
-    if (lhs.n_cols_ != rhs.n_rows_)
+    if (lhs.n_cols() != rhs.n_rows())
         throw Undef_Product {};
 
-    Matrix<T> product {lhs.n_rows_, rhs.n_cols_};
-    auto dim = lhs.n_cols_;
+    Matrix<T> product {lhs.n_rows(), rhs.n_cols()};
+    auto dim = lhs.n_cols();
 
-    for (auto i = 0; i != lhs.n_rows_; ++i)
+    for (auto i = 0; i != lhs.n_rows(); ++i)
     {
-        for (auto j = 0; j != rhs.n_cols_; ++j)
+        for (auto j = 0; j != rhs.n_cols(); ++j)
         {
             for (auto k = 0; k != dim; ++k)
-                product.memory_[i * product.n_cols_ + j] += lhs.memory_[i * dim + k] * 
-                                                            rhs.memory_[k * rhs.n_cols_ + j];
+                product[i][j] += lhs[i][k] * rhs[k][j];
         }
     }
+
+    return product;
 }
 
 } // namespace Linear_Algebra
