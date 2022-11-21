@@ -81,8 +81,7 @@ public:
     Matrix (const size_t n_rows, const size_t n_cols, const T init_val = T{})
               : memory_{n_rows * n_cols}, n_rows_{n_rows}, n_cols_{n_cols}
     {
-        for (auto i = 0; i != size(); ++i)
-            memory_[i] = init_val;
+        std::fill (begin(), end(), init_val);
     }
 
     Matrix (std::initializer_list<std::initializer_list<T>> il)
@@ -164,7 +163,7 @@ public:
 
     public:
 
-        iterator (const T *ptr) : ptr_{ptr} {}
+        iterator (T *ptr) : ptr_{ptr} {}
 
         iterator (const iterator &iter) = default;
         iterator &operator= (const iterator &iter) = default;
