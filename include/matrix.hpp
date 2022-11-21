@@ -149,6 +149,105 @@ public:
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    // Iterators
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    class iterator final
+    {
+        using iterator_category = typename std::input_iterator_tag;
+        using difference_type = ptrdiff_t;
+        using value_type = T;
+        using reference = T&;
+        using pointer = T*;
+
+        T *ptr_;
+
+    public:
+
+        iterator (const T *ptr) : ptr_{ptr} {}
+
+        iterator (const iterator &iter) = default;
+        iterator &operator= (const iterator &iter) = default;
+
+        iterator (iterator &&iter) = default;
+        iterator &operator= (iterator &&iter) = default;
+
+        T &operator* () { return *ptr_; }
+
+        iterator &operator++ () { return (ptr_++, *this); }
+
+        iterator operator++ (int)
+        {
+            auto iter_copy = *this;
+            ptr_++;
+            return iter_copy;
+        }
+
+        iterator &operator-- () { return (ptr_--, *this); }
+
+        iterator operator-- (int)
+        {
+            auto iter_copy = *this;
+            ptr_--;
+            return iter_copy;
+        }
+
+        bool operator<=> (const iterator &iter) const = default; 
+    };
+
+    class const_iterator final
+    {
+        using iterator_category = typename std::input_iterator_tag;
+        using difference_type = ptrdiff_t;
+        using value_type = T;
+        using reference = T&;
+        using pointer = T*;
+
+        const T *ptr_;
+
+    public:
+
+        const_iterator (const T *ptr) : ptr_{ptr} {}
+
+        const_iterator (const const_iterator &iter) = default;
+        const_iterator &operator= (const const_iterator &iter) = default;
+
+        const_iterator (const_iterator &&iter) = default;
+        const_iterator &operator= (const_iterator &&iter) = default;
+
+        const T &operator* () const { return *ptr_; }
+
+        const_iterator &operator++ () { return (ptr_++, *this); }
+
+        const_iterator operator++ (int)
+        {
+            auto iter_copy = *this;
+            ptr_++;
+            return iter_copy;
+        }
+
+        const_iterator &operator-- () { return (ptr_--, *this); }
+
+        const_iterator operator-- (int)
+        {
+            auto iter_copy = *this;
+            ptr_--;
+            return iter_copy;
+        }
+
+        bool operator<=> (const const_iterator &iter) const = default; 
+    };
+
+    auto begin () { return iterator{data()}; }
+    auto begin () const { return const_iterator{data()}; }
+    auto cbegin () const { return const_iterator {data()}; }
+
+    auto end () { return iterator{data() + size()}; }
+    auto end () const { return const_iterator{data() + size()}; }
+    auto cend () const { return const_iterator{data() + size()}; }
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     // Some convenient methods
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -332,6 +431,7 @@ private:
     void swap_rows (const size_t row_1, const size_t row_2)
     {
         std::swap_ranges (&(*this)[row_1][0], &(*this)[row_1][n_cols_], &(*this)[row_2][0]);
+        // This looks ugly
     }
 };
 
@@ -343,7 +443,7 @@ bool operator== (const Matrix<T> &lhs, const Matrix<T> &rhs)
     else if (lhs.n_rows() != rhs.n_rows() || lhs.n_cols() != rhs.n_cols())
         return false;
     else
-        return std::equal (lhs.data(), lhs.data() + lhs.size(), rhs.data());
+        return std::equal (lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template <typename T>
