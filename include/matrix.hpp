@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <initializer_list>
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 
 #include "container.hpp"
@@ -308,19 +309,6 @@ public:
         return res;
     }
 
-    void dump (std::ostream &os = std::cout) const
-    {
-        for (auto i = 0; i != n_rows_; ++i)
-        {
-            for (auto j = 0; j != n_cols_ - 1; ++j)
-                os << (*this)[i][j] << " ";
-            os << (*this)[i][n_cols_ - 1];
-
-            if (i < n_rows_ - 1)
-                os << std::endl;
-        }
-    }
-
 private:
 
     // Gauss algorithm
@@ -449,13 +437,6 @@ template <typename T>
 bool operator!= (const Matrix<T> &lhs, const Matrix<T> &rhs) { return !(lhs == rhs); }
 
 template <typename T>
-std::ostream &operator<< (std::ostream &os, const Matrix<T> &matrix)
-{
-    matrix.dump(os);
-    return os;
-}
-
-template <typename T>
 Matrix<T> operator+ (const Matrix<T> &lhs, const Matrix<T> &rhs)
 {
     auto sum = lhs;
@@ -488,6 +469,28 @@ Matrix<T> product (const Matrix<T> &lhs, const Matrix<T> &rhs)
     }
 
     return product;
+}
+
+template <typename T>
+void dump (std::ostream &os, const Matrix<T> &matrix)
+{   
+    os.setf (std::ios::left);
+    
+    const auto n_cols = matrix.n_cols();
+    for (auto i = 1; auto &elem : matrix)
+    {
+        if (i++ % n_cols == 0)
+            os << elem << std::endl;
+        else
+            os << std::setw(5) << elem << " ";
+    }
+}
+
+template <typename T>
+std::ostream &operator<< (std::ostream &os, const Matrix<T> &matrix)
+{
+    dump(os, matrix);
+    return os;
 }
 
 } // namespace Linear_Algebra
