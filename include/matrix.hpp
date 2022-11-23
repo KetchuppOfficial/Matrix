@@ -147,104 +147,13 @@ public:
         return Proxy_Row {data() + row_i * n_cols_};
     }
 
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    auto begin () { return memory_.begin(); }
+    auto begin () const { return memory_.begin(); }
+    auto cbegin () const { return memory_.cbegin(); }
 
-    // Iterators
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    class iterator final
-    {
-        using iterator_category = typename std::input_iterator_tag;
-        using difference_type = ptrdiff_t;
-        using value_type = T;
-        using reference = T&;
-        using pointer = T*;
-
-        T *ptr_;
-
-    public:
-
-        iterator (T *ptr) : ptr_{ptr} {}
-
-        iterator (const iterator &iter) = default;
-        iterator &operator= (const iterator &iter) = default;
-
-        iterator (iterator &&iter) = default;
-        iterator &operator= (iterator &&iter) = default;
-
-        T &operator* () { return *ptr_; }
-
-        iterator &operator++ () { return (ptr_++, *this); }
-
-        iterator operator++ (int)
-        {
-            auto iter_copy = *this;
-            ptr_++;
-            return iter_copy;
-        }
-
-        iterator &operator-- () { return (ptr_--, *this); }
-
-        iterator operator-- (int)
-        {
-            auto iter_copy = *this;
-            ptr_--;
-            return iter_copy;
-        }
-
-        bool operator<=> (const iterator &iter) const = default; 
-    };
-
-    class const_iterator final
-    {
-        using iterator_category = typename std::input_iterator_tag;
-        using difference_type = ptrdiff_t;
-        using value_type = T;
-        using reference = T&;
-        using pointer = T*;
-
-        const T *ptr_;
-
-    public:
-
-        const_iterator (const T *ptr) : ptr_{ptr} {}
-
-        const_iterator (const const_iterator &iter) = default;
-        const_iterator &operator= (const const_iterator &iter) = default;
-
-        const_iterator (const_iterator &&iter) = default;
-        const_iterator &operator= (const_iterator &&iter) = default;
-
-        const T &operator* () const { return *ptr_; }
-
-        const_iterator &operator++ () { return (ptr_++, *this); }
-
-        const_iterator operator++ (int)
-        {
-            auto iter_copy = *this;
-            ptr_++;
-            return iter_copy;
-        }
-
-        const_iterator &operator-- () { return (ptr_--, *this); }
-
-        const_iterator operator-- (int)
-        {
-            auto iter_copy = *this;
-            ptr_--;
-            return iter_copy;
-        }
-
-        bool operator<=> (const const_iterator &iter) const = default; 
-    };
-
-    auto begin () { return iterator{data()}; }
-    auto begin () const { return const_iterator{data()}; }
-    auto cbegin () const { return const_iterator {data()}; }
-
-    auto end () { return iterator{data() + size()}; }
-    auto end () const { return const_iterator{data() + size()}; }
-    auto cend () const { return const_iterator{data() + size()}; }
+    auto end () { return memory_.end(); }
+    auto end () const { return memory_.end(); }
+    auto cend () const { return memory_.cend(); }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

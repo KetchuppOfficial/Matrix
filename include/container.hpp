@@ -90,6 +90,111 @@ struct Array : private Array_Buff<T>
 
     const T &operator[] (const size_t i) const { return this->data_[i]; }
     T &operator[] (const size_t i) { return this->data_[i]; }
+
+    // Iterators
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    class iterator final
+    {
+        using iterator_category = typename std::random_access_iterator_tag;
+        using difference_type = ptrdiff_t;
+        using value_type = T;
+        using reference = T&;
+        using pointer = T*;
+
+        T *ptr_;
+
+    public:
+
+        iterator (T *ptr) : ptr_{ptr} {}
+
+        iterator (const iterator &iter) = default;
+        iterator &operator= (const iterator &iter) = default;
+
+        iterator (iterator &&iter) = default;
+        iterator &operator= (iterator &&iter) = default;
+
+        difference_type operator- (const iterator &rhs) { return ptr_ - rhs.ptr_; }
+
+        reference operator* () { return *ptr_; }
+        pointer operator-> () { return ptr_; }
+        reference operator[] (const difference_type &offset) { return ptr_[offset]; }
+
+        iterator &operator++ () { return (ptr_++, *this); }
+
+        iterator operator++ (int)
+        {
+            auto iter_copy = *this;
+            ptr_++;
+            return iter_copy;
+        }
+
+        iterator &operator-- () { return (ptr_--, *this); }
+
+        iterator operator-- (int)
+        {
+            auto iter_copy = *this;
+            ptr_--;
+            return iter_copy;
+        }
+
+        bool operator<=> (const iterator &iter) const = default; 
+    };
+
+    class const_iterator final
+    {
+        using iterator_category = typename std::random_access_iterator_tag;
+        using difference_type = ptrdiff_t;
+        using value_type = const T;
+        using reference = const T&;
+        using pointer = const T*;
+
+        const T *ptr_;
+
+    public:
+
+        const_iterator (const T *ptr) : ptr_{ptr} {}
+
+        const_iterator (const const_iterator &iter) = default;
+        const_iterator &operator= (const const_iterator &iter) = default;
+
+        const_iterator (const_iterator &&iter) = default;
+        const_iterator &operator= (const_iterator &&iter) = default;
+
+        difference_type operator- (const const_iterator &rhs) const { return ptr_ - rhs.ptr_; }
+
+        reference operator* () const { return *ptr_; }
+        pointer operator-> () const { return ptr_; }
+        reference operator[] (const difference_type &offset) const { return ptr_[offset]; };
+
+        const_iterator &operator++ () { return (ptr_++, *this); }
+
+        const_iterator operator++ (int)
+        {
+            auto iter_copy = *this;
+            ptr_++;
+            return iter_copy;
+        }
+
+        const_iterator &operator-- () { return (ptr_--, *this); }
+
+        const_iterator operator-- (int)
+        {
+            auto iter_copy = *this;
+            ptr_--;
+            return iter_copy;
+        }
+
+        bool operator<=> (const const_iterator &iter) const = default; 
+    };
+
+    auto begin () { return iterator{data()}; }
+    auto begin () const { return const_iterator{data()}; }
+    auto cbegin () const { return const_iterator {data()}; }
+
+    auto end () { return iterator{data() + size()}; }
+    auto end () const { return const_iterator{data() + size()}; }
+    auto cend () const { return const_iterator{data() + size()}; }
 };
 
 } // namespace Containers
