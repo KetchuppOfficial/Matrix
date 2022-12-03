@@ -8,6 +8,134 @@ namespace Containers
 {
 
 template <typename T>
+class iterator final
+{
+    using iterator_category = typename std::random_access_iterator_tag;
+    using difference_type = ptrdiff_t;
+    using value_type = T;
+    using reference = T&;
+    using pointer = T*;
+
+    T *ptr_;
+
+public:
+    
+    iterator (T *ptr) : ptr_{ptr} {}
+
+    iterator (const iterator &iter) = default;
+    iterator &operator= (const iterator &iter) = default;
+
+    iterator (iterator &&iter) = default;
+    iterator &operator= (iterator &&iter) = default;
+
+    const T *base () const { return ptr_; }
+    T *base () { return ptr_; }
+
+    difference_type operator- (const iterator &rhs) { return ptr_ - rhs.ptr_; }
+    
+    iterator &operator+= (const difference_type offset) { return ptr_ + offset; }
+    iterator operator+ (const difference_type offset) const { return ptr_ + offset; }
+
+    reference operator* () { return *ptr_; }
+    pointer operator-> () { return ptr_; }
+    reference operator[] (const difference_type &offset) { return ptr_[offset]; }
+
+    iterator &operator++ () { return (ptr_++, *this); }
+
+    iterator operator++ (int)
+    {
+        auto iter_copy = *this;
+        ptr_++;
+        return iter_copy;
+    }
+
+    iterator &operator-- () { return (ptr_--, *this); }
+
+    iterator operator-- (int)
+    {
+        auto iter_copy = *this;
+        ptr_--;
+        return iter_copy;
+    }
+
+    bool operator<=> (const iterator &iter) const = default; 
+};
+
+template <typename T>
+iterator<T> operator+ (iterator<T> &iter, typename iterator<T>::difference_type n)
+{
+    return iter.base() + n;
+}
+
+template <typename T>
+iterator<T> operator+ (typename iterator<T>::difference_type n, iterator<T> &iter)
+{
+    return iter.base() + n;
+}
+
+template <typename T>
+class const_iterator final
+{
+    using iterator_category = typename std::random_access_iterator_tag;
+    using difference_type = ptrdiff_t;
+    using value_type = const T;
+    using reference = const T&;
+    using pointer = const T*;
+
+    const T *ptr_;
+
+public:
+
+    const_iterator (const T *ptr) : ptr_{ptr} {}
+
+    const_iterator (const const_iterator &iter) = default;
+    const_iterator &operator= (const const_iterator &iter) = default;
+
+    const_iterator (const_iterator &&iter) = default;
+    const_iterator &operator= (const_iterator &&iter) = default;
+
+    const T *base () const { return ptr_; }
+
+    difference_type operator- (const const_iterator &rhs) const { return ptr_ - rhs.ptr_; }
+
+    reference operator* () const { return *ptr_; }
+    pointer operator-> () const { return ptr_; }
+    reference operator[] (const difference_type &offset) const { return ptr_[offset]; };
+
+    const_iterator &operator++ () { return (ptr_++, *this); }
+
+    const_iterator operator++ (int)
+    {
+        auto iter_copy = *this;
+        ptr_++;
+        return iter_copy;
+    }
+
+    const_iterator &operator-- () { return (ptr_--, *this); }
+
+    const_iterator operator-- (int)
+    {
+        auto iter_copy = *this;
+        ptr_--;
+        return iter_copy;
+    }
+
+    bool operator<=> (const const_iterator &iter) const = default;  
+};
+
+template <typename T>
+const_iterator<T> operator+ (const iterator<T> &iter, typename const_iterator<T>::difference_type n)
+{
+    return iter.base() + n;
+}
+
+template <typename T>
+const_iterator<T> operator+ (typename const_iterator<T>::difference_type n, const_iterator<T> &iter)
+{
+    return iter.base() + n;
+}
+
+template <typename T>
 void construct (T *ptr, const T &value) { new (ptr) T{value}; }
 
 template <typename T>
@@ -90,103 +218,6 @@ struct Array : private Array_Buff<T>
 
     const T &operator[] (const size_t i) const { return this->data_[i]; }
     T &operator[] (const size_t i) { return this->data_[i]; }
-
-    // Iterators
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    class iterator final
-    {
-        using iterator_category = typename std::random_access_iterator_tag;
-        using difference_type = ptrdiff_t;
-        using value_type = T;
-        using reference = T&;
-        using pointer = T*;
-
-        T *ptr_;
-
-    public:
-
-        iterator (T *ptr) : ptr_{ptr} {}
-
-        iterator (const iterator &iter) = default;
-        iterator &operator= (const iterator &iter) = default;
-
-        iterator (iterator &&iter) = default;
-        iterator &operator= (iterator &&iter) = default;
-
-        difference_type operator- (const iterator &rhs) { return ptr_ - rhs.ptr_; }
-
-        reference operator* () { return *ptr_; }
-        pointer operator-> () { return ptr_; }
-        reference operator[] (const difference_type &offset) { return ptr_[offset]; }
-
-        iterator &operator++ () { return (ptr_++, *this); }
-
-        iterator operator++ (int)
-        {
-            auto iter_copy = *this;
-            ptr_++;
-            return iter_copy;
-        }
-
-        iterator &operator-- () { return (ptr_--, *this); }
-
-        iterator operator-- (int)
-        {
-            auto iter_copy = *this;
-            ptr_--;
-            return iter_copy;
-        }
-
-        bool operator<=> (const iterator &iter) const = default; 
-    };
-
-    class const_iterator final
-    {
-        using iterator_category = typename std::random_access_iterator_tag;
-        using difference_type = ptrdiff_t;
-        using value_type = const T;
-        using reference = const T&;
-        using pointer = const T*;
-
-        const T *ptr_;
-
-    public:
-
-        const_iterator (const T *ptr) : ptr_{ptr} {}
-
-        const_iterator (const const_iterator &iter) = default;
-        const_iterator &operator= (const const_iterator &iter) = default;
-
-        const_iterator (const_iterator &&iter) = default;
-        const_iterator &operator= (const_iterator &&iter) = default;
-
-        difference_type operator- (const const_iterator &rhs) const { return ptr_ - rhs.ptr_; }
-
-        reference operator* () const { return *ptr_; }
-        pointer operator-> () const { return ptr_; }
-        reference operator[] (const difference_type &offset) const { return ptr_[offset]; };
-
-        const_iterator &operator++ () { return (ptr_++, *this); }
-
-        const_iterator operator++ (int)
-        {
-            auto iter_copy = *this;
-            ptr_++;
-            return iter_copy;
-        }
-
-        const_iterator &operator-- () { return (ptr_--, *this); }
-
-        const_iterator operator-- (int)
-        {
-            auto iter_copy = *this;
-            ptr_--;
-            return iter_copy;
-        }
-
-        bool operator<=> (const const_iterator &iter) const = default; 
-    };
 
     auto begin () { return iterator{data()}; }
     auto begin () const { return const_iterator{data()}; }
