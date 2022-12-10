@@ -58,7 +58,7 @@ public:
         return iter_copy;
     }
 
-    bool operator<=> (const iterator &iter) const = default; 
+    auto operator<=> (const iterator &iter) const = default; 
 };
 
 template <typename T>
@@ -120,7 +120,7 @@ public:
         return iter_copy;
     }
 
-    bool operator<=> (const const_iterator &iter) const = default;  
+    auto operator<=> (const const_iterator &iter) const = default;  
 };
 
 template <typename T>
