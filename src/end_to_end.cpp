@@ -22,7 +22,7 @@ int main ()
         buffer.push_back (num);
     }
 
-    Linear_Algebra::Matrix<int> matrix {size, size, buffer.begin(), buffer.end()};
+    yLab::Matrix<int> matrix {size, size, buffer.begin(), buffer.end()};
 
     std::cout << matrix.determinant() << std::endl;
     

@@ -10,7 +10,7 @@
 #include "container.hpp"
 #include "floating_point_comparison.hpp"
 
-namespace Linear_Algebra
+namespace yLab
 {
 
 struct Undef_Operation : public std::runtime_error
@@ -58,7 +58,7 @@ struct Il_Il_Ctor_Fail : public std::runtime_error
 template <typename T> requires std::is_arithmetic<T>::value 
 class Matrix final
 {   
-    Containers::Array<T> memory_;
+    Array<T> memory_;
     size_t n_rows_;
     size_t n_cols_;
 
@@ -402,6 +402,6 @@ std::ostream &operator<< (std::ostream &os, const Matrix<T> &matrix)
     return os;
 }
 
-} // namespace Linear_Algebra
+} // namespace yLab
 
 #endif // INCLUDE_MATRIX_HPP

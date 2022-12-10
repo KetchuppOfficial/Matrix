@@ -6,7 +6,7 @@
 
 #include "iterator.hpp"
 
-namespace Containers
+namespace yLab
 {
 
 template <typename T>
@@ -105,6 +105,6 @@ struct Array : private Array_Buff<T>
     auto cend () const { return const_iterator{data() + size()}; }
 };
 
-} // namespace Containers
+} // namespace yLab
 
 #endif // INCLUDE_CONTAINER_HPP
