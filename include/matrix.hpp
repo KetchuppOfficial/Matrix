@@ -162,12 +162,25 @@ public:
 
     Matrix &transpose () &
     {
-        Matrix<T> transposed {n_cols_, n_rows_};
-        for (auto i = 0; i != n_rows_; ++i)
-            for (auto j = 0; j != n_cols_; ++j)
-                transposed[j][i] = (*this)[i][j];
+        if (n_cols_ == n_rows_)
+        {
+            for (auto i = 0; i != n_rows_; ++i)
+                for (auto j = i + 1; j != n_cols_; ++j)
+                    std::swap ((*this)[i][j], (*this)[j][i]);
 
-        std::swap (*this, transposed);
+            std::swap (n_cols_, n_rows_);
+        }
+        else
+        {
+            Matrix<T> transposed {n_cols_, n_rows_};
+
+            for (auto i = 0; i != n_rows_; ++i)
+                for (auto j = 0; j != n_cols_; ++j)
+                    transposed[j][i] = (*this)[i][j];
+
+            std::swap (*this, transposed);
+        }
+        
         return *this;
     }
 
