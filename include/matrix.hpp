@@ -80,7 +80,9 @@ public:
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Matrix (const size_t n_rows, const size_t n_cols, const T init_val = T{})
-              : memory_{n_rows * n_cols}, n_rows_{n_rows}, n_cols_{n_cols}
+           : memory_{n_rows * n_cols},
+             n_rows_{n_rows},
+             n_cols_{n_cols}
     {
         std::fill (begin(), end(), init_val);
     }
@@ -103,7 +105,9 @@ public:
 
     template <std::input_iterator Iter>
     Matrix (const size_t n_rows, const size_t n_cols, Iter begin, Iter end)
-              : memory_{n_rows * n_cols}, n_rows_{n_rows}, n_cols_{n_cols}
+           : memory_{n_rows * n_cols},
+             n_rows_{n_rows},
+             n_cols_{n_cols}
     {
         auto i = 0;
         for (auto iter = begin; iter != end && i != size(); ++iter, ++i)
