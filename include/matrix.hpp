@@ -340,8 +340,8 @@ private:
 
     void swap_rows (const size_t row_1, const size_t row_2)
     {
-        std::swap_ranges (&(*this)[row_1][0], &(*this)[row_1][n_cols_], &(*this)[row_2][0]);
-        // This looks ugly
+        std::swap_ranges (begin() + row_1 * n_cols_, begin() + row_1 * (n_cols_ + 1),
+                          begin() + row_2 * n_cols_);
     }
 };
 
