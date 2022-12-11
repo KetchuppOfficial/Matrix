@@ -113,12 +113,6 @@ public:
             memory_[i] = T{};
     }
 
-    Matrix (const Matrix &rhs) = default;
-    Matrix &operator= (const Matrix &rhs) = default;
-
-    Matrix (Matrix &&rhs) = default;
-    Matrix &operator= (Matrix &&rhs) = default;
-
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // Fields access
