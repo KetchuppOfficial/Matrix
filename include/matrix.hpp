@@ -88,18 +88,18 @@ public:
         std::fill (begin(), end(), init_val);
     }
 
-    Matrix (std::initializer_list<std::initializer_list<T>> il)
-           : memory_{il.size() * il.begin()->size()}, 
-             n_rows_{il.size()}, 
-             n_cols_{il.begin()->size()}
+    Matrix (std::initializer_list<std::initializer_list<T>> il_il)
+           : memory_{il_il.size() * il_il.begin()->size()}, 
+             n_rows_{il_il.size()}, 
+             n_cols_{il_il.begin()->size()}
     {
         auto row_i = 0;
-        for (auto out_iter = il.begin(), o_end = il.end(); out_iter != o_end; ++out_iter)
+        for (auto ext_iter = il_il.begin(), ext_end = il_il.end(); ext_iter != ext_end; ++ext_iter)
         {
-            if (out_iter->size() != n_cols_)
+            if (ext_iter->size() != n_cols_)
                 throw Il_Il_Ctor_Fail{};
 
-            std::copy (out_iter->begin(), out_iter->end(),
+            std::copy (ext_iter->begin(), ext_iter->end(),
                        begin() + row_i * n_cols_);
             row_i++;
         }
