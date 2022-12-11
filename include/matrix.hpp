@@ -93,14 +93,15 @@ public:
              n_rows_{il.size()}, 
              n_cols_{il.begin()->size()}
     {
-        auto i = 0;
+        auto row_i = 0;
         for (auto out_iter = il.begin(), o_end = il.end(); out_iter != o_end; ++out_iter)
         {
             if (out_iter->size() != n_cols_)
                 throw Il_Il_Ctor_Fail{};
 
-            for (auto in_iter = out_iter->begin(), i_end = out_iter->end(); in_iter != i_end; ++in_iter)
-                memory_[i++] = *in_iter;
+            std::copy (out_iter->begin(), out_iter->end(),
+                       begin() + row_i * n_cols_);
+            row_i++;
         }
     }
 
@@ -340,7 +341,7 @@ private:
 
     void swap_rows (const size_t row_1, const size_t row_2)
     {
-        std::swap_ranges (begin() + row_1 * n_cols_, begin() + row_1 * (n_cols_ + 1),
+        std::swap_ranges (begin() + row_1 * n_cols_, begin() + (row_1 + 1) * n_cols_,
                           begin() + row_2 * n_cols_);
     }
 };
