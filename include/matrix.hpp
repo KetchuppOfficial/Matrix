@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
+#include <functional>
 
 #include "container.hpp"
 #include "floating_point_comparison.hpp"
@@ -204,8 +205,9 @@ public:
         if (n_rows_ != rhs.n_rows_ || n_cols_ != rhs.n_cols_)
             throw Undef_Sum {};
 
-        for (auto i = 0; i != size(); ++i)
-            memory_[i] += rhs.memory_[i];
+        std::transform (begin(), end(), rhs.begin(), begin(), std::plus<T>());
+
+        return *this;
     }
 
     Matrix &operator-= (const Matrix &rhs)
@@ -213,8 +215,9 @@ public:
         if (n_rows_ != rhs.n_rows_ || n_cols_ != rhs.n_cols_)
             throw Undef_Diff {};
 
-        for (auto i = 0; i != size(); ++i)
-            memory_[i] -= rhs.memory_[i];
+        std::transform (begin(), end(), rhs.begin(), begin(), std::minus<T>());
+
+        return *this;
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
