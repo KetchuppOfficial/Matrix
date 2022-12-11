@@ -58,7 +58,7 @@ struct Il_Il_Ctor_Fail : public std::runtime_error
 template <typename T> requires std::is_arithmetic<T>::value 
 class Matrix final
 {   
-    Array<T> memory_;
+    yLab::Array<T> memory_;
     size_t n_rows_;
     size_t n_cols_;
 
