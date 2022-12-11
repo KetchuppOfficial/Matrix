@@ -65,13 +65,13 @@ class Matrix final
     struct const_Proxy_Row
     {        
         const T *row_;
-        const T& operator[] (size_t j) const { return row_[j]; }
+        const T &operator[] (size_t j) const { return row_[j]; }
     };
 
     struct Proxy_Row
     {
         T *row_;
-        T& operator[] (size_t j) { return row_[j]; }
+        T &operator[] (size_t j) { return row_[j]; }
     };
 
 public:
