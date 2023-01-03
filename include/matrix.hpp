@@ -256,6 +256,12 @@ public:
         return *this;
     }
 
+    Matrix operator/ (const T &value)
+    {
+        auto div = *this;
+        return div /= value;
+    }
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 private:
@@ -408,16 +414,6 @@ Matrix<T> operator* (const Matrix<T> &lhs, const T &value)
 
 template <typename T>
 Matrix<T> operator* (const T &value, const Matrix<T> &lhs) { return lhs * value; }
-
-template <typename T>
-Matrix<T> operator/ (const Matrix<T> &lhs, const T &value)
-{
-    auto div = lhs;
-    return div /= value;
-}
-
-template <typename T>
-Matrix<T> operator/ (const T &value, const Matrix<T> &lhs) { return lhs / value; }
 
 template <typename T>
 Matrix<T> product (const Matrix<T> &lhs, const Matrix<T> &rhs)
