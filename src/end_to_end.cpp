@@ -1,29 +1,14 @@
 #include <iostream>
-#include <vector>
-#include <cassert>
+#include <iterator>
 
 #include "matrix.hpp"
 
 int main ()
 {
-    size_t size;
-    std::cin >> size;
-    assert (std::cin.good ());
+    auto cin_iter = std::istream_iterator<int> (std::cin);
+    size_t size = *cin_iter;
 
-    std::vector<int> buffer;
-    buffer.reserve(size * size);
-
-    for (auto i = 0; i != size * size; ++i)
-    {
-        int num;
-        std::cin >> num;
-        assert (std::cin.good());
-
-        buffer.push_back (num);
-    }
-
-    yLab::Matrix<int> matrix {size, size, buffer.begin(), buffer.end()};
-
+    yLab::Matrix<int> matrix {size, size, ++cin_iter, std::istream_iterator<int>()};
     std::cout << matrix.determinant() << std::endl;
     
     return 0;
