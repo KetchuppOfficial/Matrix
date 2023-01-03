@@ -221,6 +221,20 @@ public:
         return *this;
     }
 
+    Matrix &operator*= (const T &value)
+    {
+        std::for_each (begin(), end(), [value](T &elem){ elem *= value; });
+
+        return *this;
+    }
+
+    Matrix &operator/= (const T &value)
+    {
+        std::for_each (begin(), end(), [value](T &elem){ elem /= value; });
+
+        return *this;
+    }
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     static Matrix identity_matrix (const size_t n_rows, const size_t n_cols)
@@ -373,6 +387,26 @@ Matrix<T> operator- (const Matrix<T> &lhs, const Matrix<T> &rhs)
     auto diff = lhs;
     return diff -= rhs;
 }
+
+template <typename T>
+Matrix<T> operator* (const Matrix<T> &lhs, const T &value)
+{
+    auto mult = lhs;
+    return mult *= value;
+}
+
+template <typename T>
+Matrix<T> operator* (const T &value, const Matrix<T> &lhs) { return lhs * value; }
+
+template <typename T>
+Matrix<T> operator/ (const Matrix<T> &lhs, const T &value)
+{
+    auto div = lhs;
+    return div /= value;
+}
+
+template <typename T>
+Matrix<T> operator/ (const T &value, const Matrix<T> &lhs) { return lhs / value; }
 
 template <typename T>
 Matrix<T> product (const Matrix<T> &lhs, const Matrix<T> &rhs)
