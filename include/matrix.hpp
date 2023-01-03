@@ -56,7 +56,7 @@ struct Il_Il_Ctor_Fail : public std::runtime_error
     {}
 };
 
-template <typename T> requires std::is_arithmetic<T>::value 
+template <typename T> requires std::is_arithmetic_v<T>
 class Matrix final
 {   
     size_t n_rows_;
@@ -267,7 +267,7 @@ public:
 private:
 
     // Gauss algorithm
-    T det_algorithm () requires std::is_floating_point<T>::value
+    T det_algorithm () requires std::is_floating_point_v<T>
     {
         auto exchanges = 0;
         
@@ -313,7 +313,7 @@ private:
     }
 
     // Bareiss algorithm
-    T det_algorithm () requires std::is_integral<T>::value
+    T det_algorithm () requires std::is_integral_v<T>
     {
         auto exchanges = 0;
 
