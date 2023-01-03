@@ -53,7 +53,7 @@ struct Array : private Array_Buff<T>
     using iterator = typename yLab::iterator<T>;
     using const_iterator = typename yLab::const_iterator<T>;
     
-    Array (const size_t size = 0) : Array_Buff<T> {size} {}
+    Array (const size_t size = 0) : Array_Buff<T>{size} {}
 
     Array (const Array &rhs) : Array_Buff<T>{rhs.size_}
     {
@@ -63,7 +63,7 @@ struct Array : private Array_Buff<T>
 
     Array &operator= (const Array &rhs)
     {
-        Array tmp {rhs};
+        Array tmp{rhs};
         std::swap (*this, tmp);
 
         return *this;
