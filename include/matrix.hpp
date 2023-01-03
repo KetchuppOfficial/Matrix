@@ -170,14 +170,16 @@ public:
     // Some convenient methods
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    bool same_size_as (const Matrix &rhs) const
+    static bool are_congruent (const Matrix &lhs, const Matrix &rhs)
     {
-        return n_rows_ == rhs.n_rows_ && n_cols_ == rhs.n_cols_;
+        return lhs.n_rows_ == rhs.n_rows_ && lhs.n_cols_ == rhs.n_cols_;
     }
+
+    bool is_square () const { return n_rows_ == n_cols_; }
 
     Matrix &transpose () &
     {
-        if (n_cols_ == n_rows_)
+        if (is_square())
         {
             for (auto i = 0; i != n_rows_; ++i)
                 for (auto j = i + 1; j != n_cols_; ++j)
@@ -201,7 +203,7 @@ public:
 
     T determinant () const
     {
-        if (n_cols_ != n_rows_)
+        if (!is_square())
             throw Undef_Det {};
         
         auto copy = *this;
@@ -218,7 +220,7 @@ public:
 
     Matrix &operator+= (const Matrix &rhs)
     {
-        if (!same_size_as (rhs))
+        if (!are_congruent (*this, rhs))
             throw Undef_Sum {};
 
         std::transform (begin(), end(),
@@ -230,7 +232,7 @@ public:
 
     Matrix &operator-= (const Matrix &rhs)
     {
-        if (!same_size_as (rhs))
+        if (!are_congruent (*this, rhs))
             throw Undef_Diff {};
 
         std::transform (begin(), end(), 
@@ -374,7 +376,7 @@ bool operator== (const Matrix<T> &lhs, const Matrix<T> &rhs)
 {
     if (&lhs == &rhs)
         return true;
-    else if (lhs.n_rows() != rhs.n_rows() || lhs.n_cols() != rhs.n_cols())
+    else if (!Matrix<T>::are_congruent (lhs, rhs))
         return false;
     else
         return std::equal (lhs.begin(), lhs.end(), rhs.begin());
