@@ -1,29 +1,12 @@
 #ifndef INCLUDE_CONTAINER_HPP
 #define INCLUDE_CONTAINER_HPP
 
-#include <memory> // for std::adressof
 #include <algorithm> // for std::swap
 
 #include "iterator.hpp"
 
 namespace yLab
 {
-
-template <typename T>
-void construct (T *ptr, const T &value) { new (ptr) T{value}; }
-
-template <typename T>
-void construct (T *ptr, T &&value) { new (ptr) T{std::move (value)}; }
-
-template <typename T>
-void destroy (T *ptr) noexcept { ptr->~T(); }
-
-template <typename Fwd_Iter>
-void destroy (Fwd_Iter begin, Fwd_Iter end) noexcept
-{
-    while (begin != end)
-        destroy (std::addressof (*begin++));
-}
 
 template <typename T>
 class Array_Buff
@@ -58,7 +41,7 @@ protected:
 
     virtual ~Array_Buff ()
     {
-        destroy (data_, data_ + size_);
+        std::destroy (data_, data_ + size_);
         ::operator delete (data_);
     }
 };
@@ -74,7 +57,7 @@ struct Array : private Array_Buff<T>
     Array (const Array &rhs) : Array_Buff<T>{rhs.size_}
     {
         for (auto i = 0; i < rhs.size_; i++)
-            construct (this->data_ + i, rhs.data_[i]);
+            std::construct_at (this->data_ + i, rhs.data_[i]);
     }
 
     Array &operator= (const Array &rhs)
