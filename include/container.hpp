@@ -18,9 +18,9 @@ protected:
     size_t size_;
 
     Array_Buff (const size_t size = 0)
-          : data_{(size == 0) ? nullptr : static_cast<T *>(::operator new (sizeof (T) * size))},
-            size_{size}
-    {}
+               : data_{(size == 0) ? nullptr :
+                                     static_cast<T *>(::operator new (sizeof (T) * size))},
+                 size_{size} {}
 
     Array_Buff (const Array_Buff &rhs) = delete;
     Array_Buff &operator= (const Array_Buff &rhs) = delete;
