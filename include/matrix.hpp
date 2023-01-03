@@ -289,7 +289,7 @@ private:
         for (auto diag_i = 1; diag_i != n_cols_; ++diag_i)
             determinant *= (*this)[diag_i][diag_i];
 
-        if (cmp::are_equal (determinant, 0.0))
+        if (yLab::cmp::are_equal (determinant, 0.0))
             determinant = 0.0;
 
         return (exchanges % 2) ? -determinant : determinant;

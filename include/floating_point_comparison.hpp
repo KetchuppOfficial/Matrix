@@ -3,6 +3,9 @@
 
 #include <concepts>
 
+namespace yLab
+{
+
 namespace cmp
 {
 
@@ -22,5 +25,7 @@ bool are_equal (const T first, const T second,
 }
 
 } // namespace cmp
+
+} // namespace yLab
 
 #endif // INCLUDE_FLOATING_POINT_COMPARISON
