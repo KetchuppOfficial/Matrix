@@ -59,9 +59,9 @@ struct Il_Il_Ctor_Fail : public std::runtime_error
 template <typename T> requires std::is_arithmetic<T>::value 
 class Matrix final
 {   
-    yLab::Array<T> memory_;
     size_t n_rows_;
     size_t n_cols_;
+    yLab::Array<T> memory_;
 
     struct const_Proxy_Row
     {        
@@ -81,17 +81,17 @@ public:
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Matrix (const size_t n_rows, const size_t n_cols, const T init_val = T{})
-           : memory_{n_rows * n_cols},
-             n_rows_{n_rows},
-             n_cols_{n_cols}
+           : n_rows_{n_rows},
+             n_cols_{n_cols},
+             memory_{n_rows_ * n_cols_}
     {
         std::fill (begin(), end(), init_val);
     }
 
     Matrix (std::initializer_list<std::initializer_list<T>> il_il)
-           : memory_{il_il.size() * il_il.begin()->size()}, 
-             n_rows_{il_il.size()}, 
-             n_cols_{il_il.begin()->size()}
+           : n_rows_{il_il.size()}, 
+             n_cols_{il_il.begin()->size()},
+             memory_{n_rows_ * n_cols_}
     {
         auto row_i = 0;
         for (auto ext_iter = il_il.begin(), ext_end = il_il.end(); ext_iter != ext_end; ++ext_iter)
@@ -107,9 +107,9 @@ public:
 
     template <std::input_iterator Iter>
     Matrix (const size_t n_rows, const size_t n_cols, Iter begin, Iter end)
-           : memory_{n_rows * n_cols},
-             n_rows_{n_rows},
-             n_cols_{n_cols}
+           : n_rows_{n_rows},
+             n_cols_{n_cols},
+             memory_{n_rows_ * n_cols_}
     {
         auto i = 0;
         for (auto iter = begin; iter != end && i != size(); ++iter, ++i)
@@ -117,6 +117,16 @@ public:
 
         for (; i != size(); ++i)
             memory_[i] = T{};
+    }
+
+    static Matrix identity_matrix (const size_t n_rows, const size_t n_cols)
+    {
+        Matrix<T> res {n_rows, n_cols};
+        auto min_size = std::min (n_rows, n_cols);
+        for (auto diag_i = 0; diag_i < min_size; diag_i++)
+            res[diag_i][diag_i] = T{1};
+
+        return res;
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -159,6 +169,11 @@ public:
 
     // Some convenient methods
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    bool same_size_as (const Matrix &rhs) const
+    {
+        return n_rows_ == rhs.n_rows_ && n_cols_ == rhs.n_cols_;
+    }
 
     Matrix &transpose () &
     {
@@ -203,20 +218,24 @@ public:
 
     Matrix &operator+= (const Matrix &rhs)
     {
-        if (n_rows_ != rhs.n_rows_ || n_cols_ != rhs.n_cols_)
+        if (!same_size_as (rhs))
             throw Undef_Sum {};
 
-        std::transform (begin(), end(), rhs.begin(), begin(), std::plus<T>());
+        std::transform (begin(), end(),
+                        rhs.begin(), begin(),
+                        std::plus<T>());
 
         return *this;
     }
 
     Matrix &operator-= (const Matrix &rhs)
     {
-        if (n_rows_ != rhs.n_rows_ || n_cols_ != rhs.n_cols_)
+        if (!same_size_as (rhs))
             throw Undef_Diff {};
 
-        std::transform (begin(), end(), rhs.begin(), begin(), std::minus<T>());
+        std::transform (begin(), end(), 
+                        rhs.begin(), begin(),
+                        std::minus<T>());
 
         return *this;
     }
@@ -236,16 +255,6 @@ public:
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    static Matrix identity_matrix (const size_t n_rows, const size_t n_cols)
-    {
-        Matrix<T> res {n_rows, n_cols};
-        auto min_size = std::min (n_rows, n_cols);
-        for (auto diag_i = 0; diag_i < min_size; diag_i++)
-            res[diag_i][diag_i] = T{1};
-
-        return res;
-    }
 
 private:
 
