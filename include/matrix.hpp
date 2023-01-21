@@ -339,7 +339,7 @@ private:
                 {
                     const auto value_2 = std::exchange ((*this)[i][row_i], T{});
 
-                    for (auto j = row_i + 1; j != n_rows_; j++)
+                    for (auto j = row_i + 1; j != n_rows_; ++j)
                         (*this)[i][j] = ((*this)[i][j] * value_1 - 
                                          (*this)[row_i][j] * value_2) / init_val;
                 }
