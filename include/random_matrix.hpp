@@ -10,7 +10,7 @@
 namespace yLab
 {
 
-template <typename T> requires std::is_arithmetic_v<T>
+template <typename T> requires std::is_integral_v<T>
 struct Random_Matrix final
 {
     size_t size_;
@@ -33,7 +33,7 @@ struct Random_Matrix final
         std::mt19937_64 gen (rd());
 
         std::uniform_int_distribution<size_t> rows (0, size - 1);
-        std::uniform_real_distribution<T> mult (-std::sqrt (size), std::sqrt (size));
+        std::uniform_int_distribution<T> mult (-size / 2, size / 2);
 
         auto n_shuffles = size * 2;
         for (auto shuffle_i = 0; shuffle_i != n_shuffles; ++shuffle_i)
@@ -45,12 +45,18 @@ struct Random_Matrix final
 
     void strings_transformation (size_t row_1, size_t row_2, const T mult)
     {
+        if (row_1 == row_2)
+            return;
+
         for (auto j = 0; j != size_; ++j)
             memory_[row_1][j] += memory_[row_2][j] * mult;
     }
 
     void columns_transformation (size_t col_1, size_t col_2, const T mult)
     {
+        if (col_1 == col_2)
+            return;
+        
         for (auto i = 0; i != size_; ++i)
             memory_[i][col_1] += memory_[i][col_2] * mult;
     }
