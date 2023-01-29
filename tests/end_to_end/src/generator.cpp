@@ -17,7 +17,7 @@ int main (int argc, char *argv[])
     std::mt19937_64 gen (rd());
     std::uniform_int_distribution<int> det (-max_det, max_det);
 
-    for (auto i = 0; i != n_matrices; ++i)
+    for (auto i = 1; i <= n_matrices; ++i)
     {
         auto actual_det = det (gen);
         yLab::Random_Matrix<int> matrix {size, actual_det};
