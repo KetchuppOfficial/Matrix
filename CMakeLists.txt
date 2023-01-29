@@ -17,3 +17,4 @@ set(CMAKE_CXX_EXTENSIONS        OFF)
 set (INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_subdirectory(tests/unit_tests)
+add_subdirectory(tests/end_to_end)
