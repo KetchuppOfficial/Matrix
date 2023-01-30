@@ -2,7 +2,7 @@
 
 # argv[1]: the number of matrices
 # argv[2]: the size of matrices
-# argv[3]: the determinant of matrices
+# argv[3]: maximal module of the determinant of matrices
 
 green="\033[1;32m"
 red="\033[1;31m"
