@@ -48,7 +48,7 @@ If --prefix option is omitted, executable files will be installed in Matrix/bin/
 ## How to generate tests
 
 If you want to run some tests on the determinant calculation algorithm, go to
-[./tests](Matrix/tests/) directory. There you will find a special script **det.sh** provided for 
+[Matrix/tests](./tests/) directory. There you will find a special script **det.sh** provided for 
 such purpose.
 
 Let **N** be the number of tests you want to run, **S** - the size of matrices, **mD** - maximal 
