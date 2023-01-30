@@ -3,7 +3,7 @@
 # argv[1]: the algorithm of determinant calculation ("gauss" or "bareiss")
 # argv[2]: the number of matrices
 # argv[3]: the size of matrices
-# argv[4]: maximal module of the determinant of matrices
+# argv[4]: maximal absolute value of the determinant of matrices
 
 green="\033[1;32m"
 red="\033[1;31m"
