@@ -9,7 +9,7 @@ The following application has to be installed:
 
 ## How to install
 ```bash
-git@github.com:KetchuppOfficial/Matrix.git
+git clone git@github.com:KetchuppOfficial/Matrix.git
 cd Matrix
 ```
 
