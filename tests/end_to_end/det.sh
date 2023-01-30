@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# argv[1]: the number of matrices
-# argv[2]: the size of matrices
-# argv[3]: maximal module of the determinant of matrices
+# argv[1]: the algorithm of determinant calculation ("gauss" or "bareiss")
+# argv[2]: the number of matrices
+# argv[3]: the size of matrices
+# argv[4]: maximal module of the determinant of matrices
 
 green="\033[1;32m"
 red="\033[1;31m"
@@ -12,7 +13,6 @@ top_dir="../../"
 build_dir="${top_dir}build/"    
 
 test_generator="test_generator"
-test_driver="test_driver"
 
 function Mkdir
 {
@@ -22,25 +22,28 @@ function Mkdir
 
 function Build_Tests
 {   
+    local det_alg=$1
+
     cmake ${top_dir} -B ${build_dir}
     
     echo "Building test generator..."
     cmake --build ${build_dir} --target ${test_generator}
     echo -en "\n"
 
-    echo "Building test driver..."
-    cmake --build ${build_dir} --target ${test_driver}
+    echo "Building test driver for ${det_alg} algorithm..."
+    cmake --build ${build_dir} --target ${det_alg}
     echo -en "\n"
 }
 
 function Run_Tests
 {
+    local det_alg=$1
     local test_generator="${build_dir}tests/end_to_end/${test_generator}"
-    local test_driver="${build_dir}tests/end_to_end/${test_driver}"
+    local test_driver="${build_dir}tests/end_to_end/${det_alg}"
 
-    local test_dir="tests/"
-    local ans_dir="answers/"
-    local res_dir="results/"
+    local test_dir="tests_${det_alg}/"
+    local ans_dir="answers_${det_alg}/"
+    local res_dir="results_${det_alg}/"
     
     Mkdir ${test_dir}
     Mkdir ${ans_dir}
@@ -66,24 +69,31 @@ function Run_Tests
     done
 }
 
-if [ $# -ne 3 ]
+if [ $# -ne 4 ]
 then
     echo "Testing script requires exactly 3 arguments"
 else
-    if [ $1 -le 0 ]
-    then
-        echo "The number of matrices has to be a positive integer number"
-    else
+    det_alg=$1
+
+    if [ $det_alg = "gauss" ] || [ $det_alg = "bareiss" ]
+    then        
         if [ $2 -le 0 ]
         then
-            echo "The size of matrices has to be a positive integer number"
+            echo "The number of matrices has to be a positive integer number"
         else
-            n_matrices=$1
-            size=$2
-            det=$3
+            if [ $3 -le 0 ]
+            then
+                echo "The size of matrices has to be a positive integer number"
+            else
+                n_matrices=$2
+                size=$3
+                det=$4
 
-            Build_Tests
-            Run_Tests
+                Build_Tests $det_alg
+                Run_Tests $det_alg
+            fi
         fi
+    else
+        "There is no testing mode with name $1"
     fi
 fi
