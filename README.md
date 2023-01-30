@@ -33,7 +33,7 @@ testing system.
 
 If --target option is omitted, all targets will be built.
 
-### 3) Installing
+### 3) Install executable files (optional)
 
 You can install executable files in any directory you wish:
 
