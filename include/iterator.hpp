@@ -35,7 +35,7 @@ public:
     iterator operator- (const difference_type n) const { return iterator{ptr_ - n}; }
 
     reference operator* () const { return *ptr_; }
-    pointer operator-> () { return ptr_; }
+    pointer operator-> () const { return ptr_; }
 
     reference operator[] (const difference_type offset) const { return ptr_[offset]; }
 
