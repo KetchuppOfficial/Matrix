@@ -27,10 +27,7 @@ protected:
     
     Array_Buff (Array_Buff &&rhs) noexcept
                : data_{std::exchange (rhs.data_, nullptr)}, 
-                 size_{std::move (rhs.size_)}
-    {
-        rhs.size_ = 0;
-    }
+                 size_{std::exchange (rhs.size_, 0)} {}
 
     Array_Buff &operator= (Array_Buff &&rhs) noexcept
     {
