@@ -50,7 +50,11 @@ struct Array : private Array_Buff<T>
     using iterator = typename yLab::iterator<T>;
     using const_iterator = typename yLab::const_iterator<T>;
     
-    Array (const size_t size = 0) : Array_Buff<T>{size} {}
+    Array (const size_t size = 0) : Array_Buff<T>{size}
+    {
+        for (auto i = 0; i < rhs.size_; i++)
+            std::construct_at (this->data_ + i, T{});
+    }
 
     Array (const Array &rhs) : Array_Buff<T>{rhs.size_}
     {
