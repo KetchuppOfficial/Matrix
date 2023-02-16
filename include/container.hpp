@@ -39,7 +39,6 @@ protected:
 
     virtual ~Array_Buff ()
     {
-        std::destroy (data_, data_ + size_);
         ::operator delete (data_);
     }
 };
@@ -52,7 +51,7 @@ struct Array : private Array_Buff<T>
     
     Array (const size_t size = 0) : Array_Buff<T>{size}
     {
-        for (auto i = 0; i < rhs.size_; i++)
+        for (auto i = 0; i < size; i++)
             std::construct_at (this->data_ + i, T{});
     }
 
@@ -68,6 +67,11 @@ struct Array : private Array_Buff<T>
         std::swap (*this, tmp);
 
         return *this;
+    }
+
+    ~Array ()
+    {
+        std::destroy (this->data_, this->data_ + this->size_);
     }
     
     Array (Array &&rhs) = default;
