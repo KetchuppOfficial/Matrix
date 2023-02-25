@@ -37,7 +37,7 @@ protected:
         return *this;
     }
 
-    virtual ~Array_Buff ()
+    ~Array_Buff ()
     {
         ::operator delete (data_);
     }
