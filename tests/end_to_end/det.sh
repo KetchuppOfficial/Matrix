@@ -94,6 +94,6 @@ else
             fi
         fi
     else
-        "There is no testing mode with name $1"
+        echo "There is no testing mode with name $1"
     fi
 fi
