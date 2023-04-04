@@ -44,7 +44,7 @@ protected:
 };
 
 template <typename T>
-class Array : private Array_Buff<T>
+class Array final: private Array_Buff<T>
 {   
 public:
 
