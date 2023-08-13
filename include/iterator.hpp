@@ -49,13 +49,13 @@ public:
 };
 
 template <typename T>
-inline iterator<T> operator+ (typename iterator<T>::difference_type n, const iterator<T> &iter)
+iterator<T> operator+ (typename iterator<T>::difference_type n, const iterator<T> &iter)
 {
     return iterator<T>{iter.base() + n};
 }
 
 template <typename T>
-inline iterator<T>::difference_type operator- (const iterator<T> &lhs, const iterator<T> &rhs)
+iterator<T>::difference_type operator- (const iterator<T> &lhs, const iterator<T> &rhs)
 {
     return lhs.base() - rhs.base();
 }
