@@ -9,7 +9,7 @@
 namespace yLab
 {
 
-template <typename T>
+template<typename T>
 class Array_Buff
 {
 protected:
@@ -43,7 +43,7 @@ protected:
     }
 };
 
-template <typename T>
+template<typename T>
 class Array final: private Array_Buff<T>
 {
 public:

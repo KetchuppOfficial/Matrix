@@ -11,7 +11,7 @@
 namespace yLab
 {
 
-template <typename T>
+template<typename T>
 requires std::is_integral_v<T>
 struct Random_Matrix final
 {
@@ -60,7 +60,7 @@ struct Random_Matrix final
     }
 };
 
-template <typename T>
+template<typename T>
 void dump (std::ostream &os, const Random_Matrix<T> &matrix)
 {
     os.setf (std::ios::left);
@@ -77,7 +77,7 @@ void dump (std::ostream &os, const Random_Matrix<T> &matrix)
     }
 }
 
-template <typename T>
+template<typename T>
 std::ostream &operator<< (std::ostream &os, const Random_Matrix<T> &matrix)
 {
     dump(os, matrix);

@@ -4,7 +4,7 @@
 namespace yLab
 {
 
-template <typename T>
+template<typename T>
 class iterator final
 {
     T *ptr_;
@@ -48,19 +48,19 @@ public:
     auto operator<=> (const iterator &iter) const = default;
 };
 
-template <typename T>
+template<typename T>
 iterator<T> operator+ (typename iterator<T>::difference_type n, const iterator<T> &iter)
 {
     return iterator<T>{iter.base() + n};
 }
 
-template <typename T>
+template<typename T>
 iterator<T>::difference_type operator- (const iterator<T> &lhs, const iterator<T> &rhs)
 {
     return lhs.base() - rhs.base();
 }
 
-template <typename T>
+template<typename T>
 class const_iterator final
 {
     const T *ptr_;
@@ -104,13 +104,13 @@ public:
     auto operator<=> (const const_iterator &iter) const = default;
 };
 
-template <typename T>
+template<typename T>
 const_iterator<T> operator+ (typename const_iterator<T>::difference_type n, const const_iterator<T> &iter)
 {
     return const_iterator<T>{iter.base() + n};
 }
 
-template <typename T>
+template<typename T>
 const_iterator<T>::difference_type operator- (const const_iterator<T> &lhs, const const_iterator<T> &rhs)
 {
     return lhs.base() - rhs.base();

@@ -54,7 +54,7 @@ struct Il_Il_Ctor_Fail : public std::runtime_error
                     : std::runtime_error{"The quantity of elements in each row must be the same"} {}
 };
 
-template <typename T>
+template<typename T>
 requires std::is_arithmetic_v<T>
 class Matrix final
 {
@@ -101,7 +101,7 @@ public:
         }
     }
 
-    template <std::input_iterator Iter>
+    template<std::input_iterator Iter>
     Matrix (std::size_t n_rows, std::size_t n_cols, Iter begin, Iter end)
            : n_rows_{n_rows},
              n_cols_{n_cols},
@@ -371,7 +371,7 @@ private:
     }
 };
 
-template <typename T>
+template<typename T>
 bool operator== (const Matrix<T> &lhs, const Matrix<T> &rhs)
 {
     if (&lhs == &rhs)
@@ -382,28 +382,28 @@ bool operator== (const Matrix<T> &lhs, const Matrix<T> &rhs)
         return std::equal (lhs.begin(), lhs.end(), rhs.begin());
 }
 
-template <typename T>
+template<typename T>
 Matrix<T> operator+ (const Matrix<T> &lhs, const Matrix<T> &rhs)
 {
     auto sum = lhs;
     return sum += rhs;
 }
 
-template <typename T>
+template<typename T>
 Matrix<T> operator- (const Matrix<T> &lhs, const Matrix<T> &rhs)
 {
     auto diff = lhs;
     return diff -= rhs;
 }
 
-template <typename T>
+template<typename T>
 Matrix<T> operator* (const Matrix<T> &lhs, const T &value)
 {
     auto mult = lhs;
     return mult *= value;
 }
 
-template <typename T>
+template<typename T>
 Matrix<T> operator* (const T &value, const Matrix<T> &lhs) { return lhs * value; }
 
 template<typename T>
@@ -413,7 +413,7 @@ Matrix<T> operator/ (const Matrix<T> &lhs, const T &value)
     return div /= value;
 }
 
-template <typename T>
+template<typename T>
 Matrix<T> product (const Matrix<T> &lhs, const Matrix<T> &rhs)
 {
     if (lhs.n_cols() != rhs.n_rows())
@@ -430,7 +430,7 @@ Matrix<T> product (const Matrix<T> &lhs, const Matrix<T> &rhs)
     return product;
 }
 
-template <typename T>
+template<typename T>
 void dump (std::ostream &os, const Matrix<T> &matrix)
 {
     os.setf (std::ios::left);
@@ -445,7 +445,7 @@ void dump (std::ostream &os, const Matrix<T> &matrix)
     }
 }
 
-template <typename T>
+template<typename T>
 std::ostream &operator<< (std::ostream &os, const Matrix<T> &matrix)
 {
     dump(os, matrix);
