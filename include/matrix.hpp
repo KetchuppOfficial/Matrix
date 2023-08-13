@@ -58,9 +58,20 @@ template<typename T>
 requires std::is_arithmetic_v<T>
 class Matrix final
 {
-    std::size_t n_rows_;
-    std::size_t n_cols_;
-    yLab::Array<T> memory_;
+public:
+
+    using value_type = T;
+    using reference = T&;
+    using pointer = T*;
+    using size_type = yLab::Array<value_type>::size_type;
+    using iterator = yLab::Array<value_type>::iterator;
+    using const_iterator = yLab::Array<value_type>::const_iterator;
+
+private:
+
+    size_type n_rows_;
+    size_type n_cols_;
+    yLab::Array<value_type> memory_;
 
     template<typename Ptr_T>
     struct Proxy_Row
@@ -68,7 +79,7 @@ class Matrix final
         using Data_T = std::remove_pointer_t<Ptr_T>;
 
         Ptr_T row_;
-        Data_T &operator[] (std::size_t j) const { return row_[j]; }
+        Data_T &operator[] (size_type j) const { return row_[j]; }
     };
 
 public:
@@ -76,7 +87,7 @@ public:
     // Constructors
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Matrix (std::size_t n_rows, std::size_t n_cols, T init_val = T{})
+    Matrix (size_type n_rows, size_type n_cols, value_type init_val = value_type{})
            : n_rows_{n_rows},
              n_cols_{n_cols},
              memory_{n_rows_ * n_cols_}
@@ -84,7 +95,7 @@ public:
         std::fill (begin(), end(), init_val);
     }
 
-    Matrix (std::initializer_list<std::initializer_list<T>> il_il)
+    Matrix (std::initializer_list<std::initializer_list<value_type>> il_il)
            : n_rows_{il_il.size()},
              n_cols_{il_il.begin()->size()},
              memory_{n_rows_ * n_cols_}
@@ -102,7 +113,7 @@ public:
     }
 
     template<std::input_iterator Iter>
-    Matrix (std::size_t n_rows, std::size_t n_cols, Iter begin, Iter end)
+    Matrix (size_type n_rows, size_type n_cols, Iter begin, Iter end)
            : n_rows_{n_rows},
              n_cols_{n_cols},
              memory_{n_rows_ * n_cols_}
@@ -112,15 +123,15 @@ public:
             memory_[i] = *iter;
 
         for (; i != size(); ++i)
-            memory_[i] = T{};
+            memory_[i] = value_type{};
     }
 
-    static Matrix identity_matrix (std::size_t n_rows, std::size_t n_cols)
+    static Matrix identity_matrix (size_type n_rows, size_type n_cols)
     {
-        Matrix<T> res {n_rows, n_cols};
+        Matrix<value_type> res {n_rows, n_cols};
         auto min_size = std::min (n_rows, n_cols);
         for (auto diag_i = 0; diag_i < min_size; diag_i++)
-            res[diag_i][diag_i] = T{1};
+            res[diag_i][diag_i] = value_type{1};
 
         return res;
     }
@@ -130,8 +141,8 @@ public:
     // Fields access
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    const T *data () const & { return memory_.data(); }
-    T *data () & { return memory_.data(); }
+    const value_type *data () const & { return memory_.data(); }
+    value_type *data () & { return memory_.data(); }
 
     auto size () const { return memory_.size(); }
 
@@ -143,23 +154,23 @@ public:
     // Elements access
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Proxy_Row<const T *> operator[] (std::size_t row_i) const
+    Proxy_Row<const value_type *> operator[] (size_type row_i) const
     {
         return Proxy_Row{data() + row_i * n_cols_};
     }
 
-    Proxy_Row<T *> operator[] (std::size_t row_i)
+    Proxy_Row<value_type *> operator[] (size_type row_i)
     {
         return Proxy_Row{data() + row_i * n_cols_};
     }
 
-    auto begin () { return memory_.begin(); }
-    auto begin () const { return memory_.begin(); }
-    auto cbegin () const { return begin(); }
+    iterator begin () { return memory_.begin(); }
+    const_iterator begin () const { return memory_.begin(); }
+    const_iterator cbegin () const { return begin(); }
 
-    auto end () { return memory_.end(); }
-    auto end () const { return memory_.end(); }
-    auto cend () const { return end(); }
+    iterator end () { return memory_.end(); }
+    const_iterator end () const { return memory_.end(); }
+    const_iterator cend () const { return end(); }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -185,7 +196,7 @@ public:
         }
         else
         {
-            Matrix<T> transposed {n_cols_, n_rows_};
+            Matrix<value_type> transposed {n_cols_, n_rows_};
 
             for (auto i = 0; i != n_rows_; ++i)
                 for (auto j = 0; j != n_cols_; ++j)
@@ -197,7 +208,7 @@ public:
         return *this;
     }
 
-    T determinant () const
+    value_type determinant () const
     {
         if (!is_square())
             throw Undef_Det{};
@@ -221,7 +232,7 @@ public:
 
         std::transform (begin(), end(),
                         rhs.begin(), begin(),
-                        std::plus<T>{});
+                        std::plus<value_type>{});
 
         return *this;
     }
@@ -233,23 +244,23 @@ public:
 
         std::transform (begin(), end(),
                         rhs.begin(), begin(),
-                        std::minus<T>{});
+                        std::minus<value_type>{});
 
         return *this;
     }
 
-    Matrix &operator*= (const T &value)
+    Matrix &operator*= (const value_type &value)
     {
         std::transform (begin(), end(),
-                        begin(), [&value](T &elem){ return elem * value; });
+                        begin(), [&value](reference elem){ return elem * value; });
 
         return *this;
     }
 
-    Matrix &operator/= (const T &value)
+    Matrix &operator/= (const value_type &value)
     {
         std::transform (begin(), end(),
-                        begin(), [&value](T &elem){ return elem / value; });
+                        begin(), [&value](reference elem){ return elem / value; });
 
         return *this;
     }
@@ -259,19 +270,19 @@ public:
 private:
 
     // Gauss algorithm
-    T det_algorithm ()
-    requires std::is_floating_point_v<T>
+    value_type det_algorithm ()
+    requires std::is_floating_point_v<value_type>
     {
         auto exchanges = 0;
 
-        std::size_t row_i{};
-        std::size_t col_i{};
+        size_type row_i{};
+        size_type col_i{};
 
         while (row_i < n_rows_ && col_i < n_cols_)
         {
             auto [pivot_pos, pivot] = find_pivot (row_i, col_i);
 
-            if (pivot == T{})
+            if (pivot == value_type{})
                 return pivot;
             else
             {
@@ -284,7 +295,7 @@ private:
                 for (auto i = row_i + 1; i != n_cols_; ++i)
                 {
                     auto coeff = (*this)[i][col_i] / (*this)[row_i][col_i];
-                    (*this)[i][col_i] = T{};
+                    (*this)[i][col_i] = value_type{};
 
                     for (auto j = col_i + 1; j != n_rows_; ++j)
                         (*this)[i][j] -= (*this)[row_i][j] * coeff;
@@ -295,7 +306,7 @@ private:
             }
         }
 
-        T determinant = (*this)[0][0];
+        auto determinant = (*this)[0][0];
         for (auto diag_i = 1; diag_i != n_cols_; ++diag_i)
             determinant *= (*this)[diag_i][diag_i];
 
@@ -306,18 +317,18 @@ private:
     }
 
     // Bareiss algorithm
-    T det_algorithm ()
-    requires std::is_integral_v<T>
+    value_type det_algorithm ()
+    requires std::is_integral_v<value_type>
     {
         auto exchanges = 0;
 
-        T init_val{1};
+        value_type init_val{1};
 
         for (auto row_i = 0; row_i != n_rows_ - 1; ++row_i)
         {
             auto [pivot_pos, pivot] = find_pivot (row_i, row_i);
 
-            if (pivot == T{})
+            if (pivot == value_type{})
                 return pivot;
             else
             {
@@ -331,7 +342,7 @@ private:
 
                 for (auto i = row_i + 1; i != n_cols_; ++i)
                 {
-                    auto value_2 = std::exchange ((*this)[i][row_i], T{});
+                    auto value_2 = std::exchange ((*this)[i][row_i], value_type{});
 
                     for (auto j = row_i + 1; j != n_rows_; ++j)
                         (*this)[i][j] = ((*this)[i][j] * value_1 -
@@ -347,9 +358,9 @@ private:
         return (exchanges % 2) ? -determinant : determinant;
     }
 
-    std::pair<std::size_t, T> find_pivot (std::size_t begin_row, std::size_t col) const
+    std::pair<size_type, value_type> find_pivot (size_type begin_row, size_type col) const
     {
-        std::pair<std::size_t, T> pivot {begin_row, (*this)[begin_row][col]};
+        std::pair<size_type, value_type> pivot {begin_row, (*this)[begin_row][col]};
 
         for (auto row_i = begin_row + 1; row_i != n_rows_; ++row_i)
         {
@@ -364,7 +375,7 @@ private:
         return pivot;
     }
 
-    void swap_rows (std::size_t row_1, std::size_t row_2)
+    void swap_rows (size_type row_1, size_type row_2)
     {
         std::swap_ranges (begin() + row_1 * n_cols_, begin() + (row_1 + 1) * n_cols_,
                           begin() + row_2 * n_cols_);

@@ -48,16 +48,17 @@ class Array final: private Array_Buff<T>
 {
 public:
 
-    using iterator = typename yLab::iterator<T>;
-    using const_iterator = typename yLab::const_iterator<T>;
+    using size_type = std::size_t;
+    using iterator = yLab::iterator<T *>;
+    using const_iterator = yLab::iterator<const T *>;
 
 private:
 
-    std::size_t size_ = 0;
+    size_type size_ = 0;
 
 public:
 
-    Array (std::size_t count = 0) : Array_Buff<T>{count}
+    Array (size_type count = 0) : Array_Buff<T>{count}
     {
         for (auto i = 0; i != count; ++i, ++size_)
             std::construct_at (this->data_ + i, T{});
@@ -85,13 +86,13 @@ public:
     Array (Array &&rhs) = default;
     Array &operator= (Array &&rhs) = default;
 
-    std::size_t size () const { return this->capacity_; }
+    size_type size () const { return this->capacity_; }
 
     const T *data () const & { return this->data_; }
     T *data () & { return this->data_; }
 
-    const T &operator[] (std::size_t i) const & { return this->data_[i]; }
-    T &operator[] (std::size_t i) & { return this->data_[i]; }
+    const T &operator[] (size_type i) const & { return this->data_[i]; }
+    T &operator[] (size_type i) & { return this->data_[i]; }
 
     iterator begin () { return iterator{data()}; }
     const_iterator begin () const { return const_iterator{data()}; }
