@@ -58,13 +58,13 @@ struct Il_Il_Ctor_Fail : public std::runtime_error
 
 template <typename T> requires std::is_arithmetic_v<T>
 class Matrix final
-{   
+{
     size_t n_rows_;
     size_t n_cols_;
     yLab::Array<T> memory_;
 
     struct const_Proxy_Row
-    {        
+    {
         const T *row_;
         const T &operator[] (size_t j) const { return row_[j]; }
     };
@@ -89,7 +89,7 @@ public:
     }
 
     Matrix (std::initializer_list<std::initializer_list<T>> il_il)
-           : n_rows_{il_il.size()}, 
+           : n_rows_{il_il.size()},
              n_cols_{il_il.begin()->size()},
              memory_{n_rows_ * n_cols_}
     {
@@ -197,7 +197,7 @@ public:
 
             std::swap (*this, transposed);
         }
-        
+
         return *this;
     }
 
@@ -205,10 +205,10 @@ public:
     {
         if (!is_square())
             throw Undef_Det {};
-        
+
         auto copy = *this;
         auto det  = copy.det_algorithm ();
-        
+
         return det;
     }
 
@@ -235,7 +235,7 @@ public:
         if (!are_congruent (*this, rhs))
             throw Undef_Diff {};
 
-        std::transform (begin(), end(), 
+        std::transform (begin(), end(),
                         rhs.begin(), begin(),
                         std::minus<T>());
 
@@ -270,7 +270,7 @@ private:
     T det_algorithm () requires std::is_floating_point_v<T>
     {
         auto exchanges = 0;
-        
+
         size_t row_i {};
         size_t col_i {};
 
@@ -287,7 +287,7 @@ private:
                     swap_rows (row_i, pivot_pos);
                     exchanges++;
                 }
-                
+
                 for (auto i = row_i + 1; i != n_cols_; ++i)
                 {
                     auto coeff = (*this)[i][col_i] / (*this)[row_i][col_i];
@@ -366,7 +366,7 @@ private:
                 pivot.second = elem;
             }
         }
-    
+
         return pivot;
     }
 
@@ -438,9 +438,9 @@ Matrix<T> product (const Matrix<T> &lhs, const Matrix<T> &rhs)
 
 template <typename T>
 void dump (std::ostream &os, const Matrix<T> &matrix)
-{   
+{
     os.setf (std::ios::left);
-    
+
     const auto n_cols = matrix.n_cols();
     for (auto i = 1; auto &elem : matrix)
     {

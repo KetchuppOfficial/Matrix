@@ -56,7 +56,7 @@ struct Random_Matrix final
     {
         if (col_1 == col_2)
             return;
-        
+
         for (auto i = 0; i != size_; ++i)
             memory_[i][col_1] += memory_[i][col_2] * mult;
     }
@@ -66,7 +66,7 @@ template <typename T>
 void dump (std::ostream &os, const Random_Matrix<T> &matrix)
 {
     os.setf (std::ios::left);
-    
+
     const auto size = matrix.size_;
     const auto data = matrix.memory_;
 

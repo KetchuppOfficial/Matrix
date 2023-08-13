@@ -36,7 +36,7 @@ TEST (Constructors, Iterator_Ctor)
 {
     constexpr auto n_rows = 2;
     constexpr auto n_cols = 2;
-    
+
     std::vector<int> too_small = {1, 2};
     yLab::Matrix<int> m_1 {n_rows, n_cols, too_small.begin(), too_small.end()};
     EXPECT_EQ (m_1.n_rows(), n_rows);
@@ -52,7 +52,7 @@ TEST (Constructors, Iterator_Ctor)
     const int arr_2[] = {3, 4,
                          5, 6};
     EXPECT_TRUE (std::equal (m_2.begin(), m_2.end(), arr_2));
-    
+
     std::vector<int> too_big = {7, 8, 9, 10, 11, 12};
     yLab::Matrix<int> m_3 {n_rows, n_cols, too_big.begin(), too_big.end()};
     EXPECT_EQ (m_3.n_rows(), n_rows);
@@ -80,7 +80,7 @@ TEST (Constructors, Double_Initializer_List_Ctor)
     {
         yLab::Matrix<int> m = {{1, 2, 3, 4},
                                {5, 6, 7, 8}};
-        
+
         EXPECT_EQ (m.n_rows(), 2);
         EXPECT_EQ (m.n_cols(), 4);
 

@@ -8,7 +8,7 @@ int main (int argc, char *argv[])
 {
     std::string test_dir {argv[1], strlen (argv[1])};
     std::string ans_dir  {argv[2], strlen (argv[2])};
-    
+
     int n_matrices = std::atoi (argv[3]);
     size_t size    = std::atoi (argv[4]);
     int max_det    = std::atoi (argv[5]);
@@ -21,7 +21,7 @@ int main (int argc, char *argv[])
     {
         auto actual_det = det (gen);
         yLab::Random_Matrix<int> matrix {size, actual_det};
-        
+
         auto test_i = std::to_string (i);
 
         std::string test_name {"test_"};
@@ -37,6 +37,6 @@ int main (int argc, char *argv[])
 
         ans_file << actual_det << std::endl;
     }
-    
+
     return 0;
 }

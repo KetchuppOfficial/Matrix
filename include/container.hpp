@@ -24,9 +24,9 @@ protected:
 
     Array_Buff (const Array_Buff &rhs) = delete;
     Array_Buff &operator= (const Array_Buff &rhs) = delete;
-    
+
     Array_Buff (Array_Buff &&rhs) noexcept
-               : data_{std::exchange (rhs.data_, nullptr)}, 
+               : data_{std::exchange (rhs.data_, nullptr)},
                  capacity_{std::exchange (rhs.capacity_, 0)} {}
 
     Array_Buff &operator= (Array_Buff &&rhs) noexcept
@@ -45,7 +45,7 @@ protected:
 
 template <typename T>
 class Array final: private Array_Buff<T>
-{   
+{
 public:
 
     using iterator = typename yLab::iterator<T>;
@@ -81,7 +81,7 @@ public:
     {
         std::destroy (this->data_, this->data_ + size_);
     }
-    
+
     Array (Array &&rhs) = default;
     Array &operator= (Array &&rhs) = default;
 

@@ -10,6 +10,6 @@ int main ()
 
     yLab::Matrix<double> matrix {size, size, ++cin_iter, std::istream_iterator<double>()};
     std::cout << matrix.determinant() << std::endl;
-    
+
     return 0;
 }

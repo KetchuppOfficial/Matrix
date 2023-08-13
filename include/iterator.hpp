@@ -27,7 +27,7 @@ public:
     iterator &operator= (iterator &&iter) = default;
 
     const T *base () const { return ptr_; }
-    
+
     iterator &operator+= (const difference_type offset) { return (ptr_ + offset, *this); }
     iterator &operator-= (const difference_type offset) { return (ptr_ - offset, *this); }
 
@@ -45,7 +45,7 @@ public:
     iterator &operator-- () { return (--ptr_, *this); }
     iterator operator-- (int) { return iterator{ptr_--}; }
 
-    auto operator<=> (const iterator &iter) const = default; 
+    auto operator<=> (const iterator &iter) const = default;
 };
 
 template <typename T>
@@ -101,7 +101,7 @@ public:
     const_iterator &operator-- () { return (ptr_--, *this); }
     const_iterator operator-- (int) { return const_iterator{ptr_--}; }
 
-    auto operator<=> (const const_iterator &iter) const = default;  
+    auto operator<=> (const const_iterator &iter) const = default;
 };
 
 template <typename T>

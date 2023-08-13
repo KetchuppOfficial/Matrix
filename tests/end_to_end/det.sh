@@ -10,7 +10,7 @@ red="\033[1;31m"
 default="\033[0m"
 
 top_dir="../../"
-build_dir="${top_dir}build/"    
+build_dir="${top_dir}build/"
 
 test_generator="test_generator"
 
@@ -21,11 +21,11 @@ function Mkdir
 }
 
 function Build_Tests
-{   
+{
     local det_alg=$1
 
     cmake ${top_dir} -B ${build_dir}
-    
+
     echo "Building test generator..."
     cmake --build ${build_dir} --target ${test_generator}
     echo -en "\n"
@@ -44,10 +44,10 @@ function Run_Tests
     local test_dir="tests_${det_alg}/"
     local ans_dir="answers_${det_alg}/"
     local res_dir="results_${det_alg}/"
-    
+
     Mkdir ${test_dir}
     Mkdir ${ans_dir}
-    
+
     echo "Generating tests and answers..."
     ${test_generator} ${test_dir} ${ans_dir} ${n_matrices} ${size} ${det}
     echo -en "\n"
@@ -76,7 +76,7 @@ else
     det_alg=$1
 
     if [ $det_alg = "gauss" ] || [ $det_alg = "bareiss" ]
-    then        
+    then
         if [ $2 -le 0 ]
         then
             echo "The number of matrices has to be a positive integer number"
