@@ -2,6 +2,8 @@
 #define INCLUDE_FLOATING_POINT_COMPARISON
 
 #include <concepts>
+#include <cmath>
+#include <algorithm>
 
 namespace yLab
 {

@@ -15,11 +15,11 @@ class Array_Buff
 protected:
 
     T *data_;
-    size_t capacity_;
+    std::size_t capacity_;
 
-    Array_Buff (const size_t count = 0)
-               : data_{(count == 0) ? nullptr :
-                                     static_cast<T *>(::operator new (sizeof (T) * count))},
+    Array_Buff (std::size_t count = 0)
+               : data_{(count == 0) ? nullptr
+                                    : static_cast<T *>(::operator new (sizeof (T) * count))},
                  capacity_{count} {}
 
     Array_Buff (const Array_Buff &rhs) = delete;
@@ -53,19 +53,19 @@ public:
 
 private:
 
-    size_t size_ = 0;
+    std::size_t size_ = 0;
 
 public:
 
-    Array (const size_t count = 0) : Array_Buff<T>{count}
+    Array (std::size_t count = 0) : Array_Buff<T>{count}
     {
-        for (auto i = 0; i < count; i++, size_++)
+        for (auto i = 0; i != count; ++i, ++size_)
             std::construct_at (this->data_ + i, T{});
     }
 
     Array (const Array &rhs) : Array_Buff<T>{rhs.capacity_}
     {
-        for (auto i = 0; i < rhs.capacity_; i++, size_++)
+        for (auto i = 0; i != rhs.capacity_; ++i, ++size_)
             std::construct_at (this->data_ + i, rhs.data_[i]);
     }
 
@@ -85,21 +85,21 @@ public:
     Array (Array &&rhs) = default;
     Array &operator= (Array &&rhs) = default;
 
-    size_t size () const { return this->capacity_; }
+    std::size_t size () const { return this->capacity_; }
 
     const T *data () const & { return this->data_; }
     T *data () & { return this->data_; }
 
-    const T &operator[] (const size_t i) const { return this->data_[i]; }
-    T &operator[] (const size_t i) { return this->data_[i]; }
+    const T &operator[] (std::size_t i) const & { return this->data_[i]; }
+    T &operator[] (std::size_t i) & { return this->data_[i]; }
 
-    auto begin () { return iterator{data()}; }
-    auto begin () const { return const_iterator{data()}; }
-    auto cbegin () const { return const_iterator {data()}; }
+    iterator begin () { return iterator{data()}; }
+    const_iterator begin () const { return const_iterator{data()}; }
+    const_iterator cbegin () const { return begin(); }
 
-    auto end () { return iterator{data() + size()}; }
-    auto end () const { return const_iterator{data() + size()}; }
-    auto cend () const { return const_iterator{data() + size()}; }
+    iterator end () { return iterator{data() + size()}; }
+    const_iterator end () const { return const_iterator{data() + size()}; }
+    const_iterator cend () const { return end(); }
 };
 
 } // namespace yLab

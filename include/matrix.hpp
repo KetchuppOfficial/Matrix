@@ -2,8 +2,12 @@
 #define INCLUDE_MATRIX_HPP
 
 #include <stdexcept>
+#include <type_traits>
+#include <iterator>
+#include <utility>
+#include <cmath>
 #include <initializer_list>
-#include <iostream>
+#include <ostream>
 #include <iomanip>
 #include <algorithm>
 #include <functional>
@@ -17,62 +21,54 @@ namespace yLab
 struct Undef_Operation : public std::runtime_error
 {
     Undef_Operation (const char *message)
-                    : std::runtime_error {message}
-    {};
+                    : std::runtime_error{message} {};
 };
 
 struct Undef_Sum : public Undef_Operation
 {
     Undef_Sum ()
-              : Undef_Operation {"Sum of matrices of different size is not defined"}
-    {};
+              : Undef_Operation{"Sum of matrices of different size is not defined"} {};
 };
 
 struct Undef_Diff : public Undef_Operation
 {
     Undef_Diff ()
-               : Undef_Operation {"Difference of matrices of different size is not defined"}
-    {};
+               : Undef_Operation{"Difference of matrices of different size is not defined"} {};
 };
 
 struct Undef_Product : public Undef_Operation
 {
     Undef_Product ()
-                  : Undef_Operation {"Product of matrices of different size is not defined"}
-    {};
+                  : Undef_Operation{"Product of matrices of different size is not defined"} {};
 };
 
 struct Undef_Det : public Undef_Operation
 {
     Undef_Det ()
-              : Undef_Operation {"Determinant is not defined for non-square matrices"}
-    {};
+              : Undef_Operation{"Determinant is not defined for non-square matrices"} {};
 };
 
 struct Il_Il_Ctor_Fail : public std::runtime_error
 {
     Il_Il_Ctor_Fail ()
-                    : std::runtime_error {"The quantity of elements in each row must be the same"}
-    {}
+                    : std::runtime_error{"The quantity of elements in each row must be the same"} {}
 };
 
-template <typename T> requires std::is_arithmetic_v<T>
+template <typename T>
+requires std::is_arithmetic_v<T>
 class Matrix final
 {
-    size_t n_rows_;
-    size_t n_cols_;
+    std::size_t n_rows_;
+    std::size_t n_cols_;
     yLab::Array<T> memory_;
 
-    struct const_Proxy_Row
-    {
-        const T *row_;
-        const T &operator[] (size_t j) const { return row_[j]; }
-    };
-
+    template<typename Ptr_T>
     struct Proxy_Row
     {
-        T *row_;
-        T &operator[] (size_t j) { return row_[j]; }
+        using Data_T = std::remove_pointer_t<Ptr_T>;
+
+        Ptr_T row_;
+        Data_T &operator[] (std::size_t j) const { return row_[j]; }
     };
 
 public:
@@ -80,7 +76,7 @@ public:
     // Constructors
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Matrix (const size_t n_rows, const size_t n_cols, const T init_val = T{})
+    Matrix (std::size_t n_rows, std::size_t n_cols, T init_val = T{})
            : n_rows_{n_rows},
              n_cols_{n_cols},
              memory_{n_rows_ * n_cols_}
@@ -106,7 +102,7 @@ public:
     }
 
     template <std::input_iterator Iter>
-    Matrix (const size_t n_rows, const size_t n_cols, Iter begin, Iter end)
+    Matrix (std::size_t n_rows, std::size_t n_cols, Iter begin, Iter end)
            : n_rows_{n_rows},
              n_cols_{n_cols},
              memory_{n_rows_ * n_cols_}
@@ -119,7 +115,7 @@ public:
             memory_[i] = T{};
     }
 
-    static Matrix identity_matrix (const size_t n_rows, const size_t n_cols)
+    static Matrix identity_matrix (std::size_t n_rows, std::size_t n_cols)
     {
         Matrix<T> res {n_rows, n_cols};
         auto min_size = std::min (n_rows, n_cols);
@@ -147,23 +143,23 @@ public:
     // Elements access
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    const const_Proxy_Row operator[] (const size_t row_i) const
+    Proxy_Row<const T *> operator[] (std::size_t row_i) const
     {
-        return const_Proxy_Row {data() + row_i * n_cols_};
+        return Proxy_Row{data() + row_i * n_cols_};
     }
 
-    Proxy_Row operator[] (const size_t row_i)
+    Proxy_Row<T *> operator[] (std::size_t row_i)
     {
-        return Proxy_Row {data() + row_i * n_cols_};
+        return Proxy_Row{data() + row_i * n_cols_};
     }
 
     auto begin () { return memory_.begin(); }
     auto begin () const { return memory_.begin(); }
-    auto cbegin () const { return memory_.cbegin(); }
+    auto cbegin () const { return begin(); }
 
     auto end () { return memory_.end(); }
     auto end () const { return memory_.end(); }
-    auto cend () const { return memory_.cend(); }
+    auto cend () const { return end(); }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -204,10 +200,10 @@ public:
     T determinant () const
     {
         if (!is_square())
-            throw Undef_Det {};
+            throw Undef_Det{};
 
         auto copy = *this;
-        auto det  = copy.det_algorithm ();
+        auto det  = copy.det_algorithm();
 
         return det;
     }
@@ -221,11 +217,11 @@ public:
     Matrix &operator+= (const Matrix &rhs)
     {
         if (!are_congruent (*this, rhs))
-            throw Undef_Sum {};
+            throw Undef_Sum{};
 
         std::transform (begin(), end(),
                         rhs.begin(), begin(),
-                        std::plus<T>());
+                        std::plus<T>{});
 
         return *this;
     }
@@ -233,33 +229,29 @@ public:
     Matrix &operator-= (const Matrix &rhs)
     {
         if (!are_congruent (*this, rhs))
-            throw Undef_Diff {};
+            throw Undef_Diff{};
 
         std::transform (begin(), end(),
                         rhs.begin(), begin(),
-                        std::minus<T>());
+                        std::minus<T>{});
 
         return *this;
     }
 
     Matrix &operator*= (const T &value)
     {
-        std::for_each (begin(), end(), [value](T &elem){ elem *= value; });
+        std::transform (begin(), end(),
+                        begin(), [&value](T &elem){ return elem * value; });
 
         return *this;
     }
 
     Matrix &operator/= (const T &value)
     {
-        std::for_each (begin(), end(), [value](T &elem){ elem /= value; });
+        std::transform (begin(), end(),
+                        begin(), [&value](T &elem){ return elem / value; });
 
         return *this;
-    }
-
-    Matrix operator/ (const T &value)
-    {
-        auto div = *this;
-        return div /= value;
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -267,16 +259,17 @@ public:
 private:
 
     // Gauss algorithm
-    T det_algorithm () requires std::is_floating_point_v<T>
+    T det_algorithm ()
+    requires std::is_floating_point_v<T>
     {
         auto exchanges = 0;
 
-        size_t row_i {};
-        size_t col_i {};
+        std::size_t row_i{};
+        std::size_t col_i{};
 
         while (row_i < n_rows_ && col_i < n_cols_)
         {
-            const auto [pivot_pos, pivot] = find_pivot (row_i, col_i);
+            auto [pivot_pos, pivot] = find_pivot (row_i, col_i);
 
             if (pivot == T{})
                 return pivot;
@@ -313,11 +306,12 @@ private:
     }
 
     // Bareiss algorithm
-    T det_algorithm () requires std::is_integral_v<T>
+    T det_algorithm ()
+    requires std::is_integral_v<T>
     {
         auto exchanges = 0;
 
-        T init_val {1};
+        T init_val{1};
 
         for (auto row_i = 0; row_i != n_rows_ - 1; ++row_i)
         {
@@ -337,10 +331,10 @@ private:
 
                 for (auto i = row_i + 1; i != n_cols_; ++i)
                 {
-                    const auto value_2 = std::exchange ((*this)[i][row_i], T{});
+                    auto value_2 = std::exchange ((*this)[i][row_i], T{});
 
                     for (auto j = row_i + 1; j != n_rows_; ++j)
-                        (*this)[i][j] = ((*this)[i][j] * value_1 - 
+                        (*this)[i][j] = ((*this)[i][j] * value_1 -
                                          (*this)[row_i][j] * value_2) / init_val;
                 }
 
@@ -353,9 +347,9 @@ private:
         return (exchanges % 2) ? -determinant : determinant;
     }
 
-    std::pair<size_t, T> find_pivot (const size_t begin_row, const size_t col) const
+    std::pair<std::size_t, T> find_pivot (std::size_t begin_row, std::size_t col) const
     {
-        std::pair<size_t, T> pivot {begin_row, (*this)[begin_row][col]};
+        std::pair<std::size_t, T> pivot {begin_row, (*this)[begin_row][col]};
 
         for (auto row_i = begin_row + 1; row_i != n_rows_; ++row_i)
         {
@@ -370,7 +364,7 @@ private:
         return pivot;
     }
 
-    void swap_rows (const size_t row_1, const size_t row_2)
+    void swap_rows (std::size_t row_1, std::size_t row_2)
     {
         std::swap_ranges (begin() + row_1 * n_cols_, begin() + (row_1 + 1) * n_cols_,
                           begin() + row_2 * n_cols_);
@@ -387,9 +381,6 @@ bool operator== (const Matrix<T> &lhs, const Matrix<T> &rhs)
     else
         return std::equal (lhs.begin(), lhs.end(), rhs.begin());
 }
-
-template <typename T>
-bool operator!= (const Matrix<T> &lhs, const Matrix<T> &rhs) { return !(lhs == rhs); }
 
 template <typename T>
 Matrix<T> operator+ (const Matrix<T> &lhs, const Matrix<T> &rhs)
@@ -415,23 +406,26 @@ Matrix<T> operator* (const Matrix<T> &lhs, const T &value)
 template <typename T>
 Matrix<T> operator* (const T &value, const Matrix<T> &lhs) { return lhs * value; }
 
+template<typename T>
+Matrix<T> operator/ (const Matrix<T> &lhs, const T &value)
+{
+    auto div = lhs;
+    return div /= value;
+}
+
 template <typename T>
 Matrix<T> product (const Matrix<T> &lhs, const Matrix<T> &rhs)
 {
     if (lhs.n_cols() != rhs.n_rows())
         throw Undef_Product {};
 
-    Matrix<T> product {lhs.n_rows(), rhs.n_cols()};
+    Matrix<T> product{lhs.n_rows(), rhs.n_cols()};
     auto dim = lhs.n_cols();
 
     for (auto i = 0; i != lhs.n_rows(); ++i)
-    {
         for (auto j = 0; j != rhs.n_cols(); ++j)
-        {
             for (auto k = 0; k != dim; ++k)
                 product[i][j] += lhs[i][k] * rhs[k][j];
-        }
-    }
 
     return product;
 }
@@ -441,7 +435,7 @@ void dump (std::ostream &os, const Matrix<T> &matrix)
 {
     os.setf (std::ios::left);
 
-    const auto n_cols = matrix.n_cols();
+    auto n_cols = matrix.n_cols();
     for (auto i = 1; auto &elem : matrix)
     {
         if (i++ % n_cols == 0)
