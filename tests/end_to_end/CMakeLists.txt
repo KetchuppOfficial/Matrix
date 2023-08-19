@@ -9,8 +9,8 @@ target_include_directories(gauss
 add_executable(bareiss ./src/driver.cpp)
 target_include_directories(bareiss
                            PRIVATE ${INCLUDE_DIR})
-target_compile_options(bareiss
-                       PRIVATE -DINTEGER)
+target_compile_definitions(bareiss
+                           PRIVATE INTEGER)
 
 install(TARGETS test_generator gauss bareiss
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
