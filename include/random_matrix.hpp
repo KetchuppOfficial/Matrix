@@ -31,7 +31,8 @@ struct Random_Matrix final
         std::mt19937_64 gen{rd()};
 
         std::uniform_int_distribution<std::size_t> rows{0, size - 1};
-        std::uniform_int_distribution<T> mult{-size / 2, size / 2};
+        std::uniform_int_distribution<T> mult{-static_cast<T>(size) / 2,
+                                               static_cast<T>(size) / 2};
 
         auto n_shuffles = size * 2;
         for (auto shuffle_i = 0; shuffle_i != n_shuffles; ++shuffle_i)
