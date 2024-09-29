@@ -191,8 +191,6 @@ public:
             for (auto i = 0; i != n_rows_; ++i)
                 for (auto j = i + 1; j != n_cols_; ++j)
                     std::swap ((*this)[i][j], (*this)[j][i]);
-
-            std::swap (n_cols_, n_rows_);
         }
         else
         {
