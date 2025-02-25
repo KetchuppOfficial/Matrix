@@ -1,106 +1,138 @@
 #ifndef INCLUDE_CONTAINER_HPP
 #define INCLUDE_CONTAINER_HPP
 
-#include <algorithm>
+#include <cstddef>
+#include <initializer_list>
+#include <memory>
+#include <iterator>
 #include <utility>
-
-#include "iterator.hpp"
 
 namespace yLab
 {
 
 template<typename T>
-class Array_Buff
+class Buffer
 {
-protected:
+public:
 
-    T *data_;
-    std::size_t capacity_;
+    using value_type = T;
+    using reference = T &;
+    using const_reference = const T &;
+    using pointer = T *;
+    using const_pointer = T *;
+    using size_type = std::size_t;
 
-    Array_Buff (std::size_t count = 0)
-               : data_{(count == 0) ? nullptr
-                                    : static_cast<T *>(::operator new (sizeof (T) * count))},
-                 capacity_{count} {}
+    Buffer(size_type count)
+        : data_{count == 0 ? nullptr : static_cast<T *>(::operator new(count * sizeof(T)))},
+          capacity_{count} {}
 
-    Array_Buff (const Array_Buff &rhs) = delete;
-    Array_Buff &operator= (const Array_Buff &rhs) = delete;
+    Buffer(const Buffer &) = delete;
+    Buffer &operator=(const Buffer &) = delete;
 
-    Array_Buff (Array_Buff &&rhs) noexcept
-               : data_{std::exchange (rhs.data_, nullptr)},
-                 capacity_{std::exchange (rhs.capacity_, 0)} {}
+    Buffer(Buffer &&rhs) noexcept
+        : data_{std::exchange(rhs.data_, nullptr)},
+          capacity_{std::exchange(rhs.capacity_, 0)},
+          size_{std::exchange(rhs.size_, 0)} {}
 
-    Array_Buff &operator= (Array_Buff &&rhs) noexcept
+    Buffer &operator=(Buffer &&rhs) noexcept
     {
-        std::swap (data_, rhs.data_);
-        std::swap (capacity_, rhs.capacity_);
-
+        swap(rhs);
         return *this;
     }
 
-    ~Array_Buff ()
+    void swap(Buffer &rhs) noexcept
     {
-        ::operator delete (data_);
+        std::swap(data_, rhs.data_);
+        std::swap(capacity_, rhs.capacity_);
+        std::swap(size_, rhs.size_);
     }
+
+protected:
+
+    ~Buffer()
+    {
+        std::destroy(data_, data_ + size_);
+        ::operator delete(data_);
+    }
+
+    T *data_;
+    size_type capacity_;
+    size_type size_ = 0;
 };
 
 template<typename T>
-class Array final: private Array_Buff<T>
-{
-public:
-
-    using size_type = std::size_t;
-    using iterator = yLab::iterator<T *>;
-    using const_iterator = yLab::iterator<const T *>;
-
-private:
-
-    size_type size_ = 0;
+class Array : private Buffer<T> {
+    using Buffer<T>::data_;
+    using Buffer<T>::size_;
+    using Buffer<T>::capacity_;
 
 public:
+    using typename Buffer<T>::value_type;
+    using typename Buffer<T>::reference;
+    using typename Buffer<T>::const_reference;
+    using typename Buffer<T>::pointer;
+    using typename Buffer<T>::const_pointer;
+    using typename Buffer<T>::size_type;
 
-    Array (size_type count = 0) : Array_Buff<T>{count}
+    using iterator = pointer;
+    using const_iterator = const_pointer;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+    using Buffer<T>::swap;
+
+    template<std::forward_iterator It>
+    Array(It first, It last) : Buffer<T>{static_cast<size_type>(std::distance(first, last))}
     {
-        for (auto i = 0; i != count; ++i, ++size_)
-            std::construct_at (this->data_ + i, T{});
+        for (; first != last; ++first, ++size_)
+            std::construct_at(data_ + size_, *first);
     }
 
-    Array (const Array &rhs) : Array_Buff<T>{rhs.capacity_}
+    Array(std::initializer_list<T> ilist) : Array(ilist.begin(), ilist.end()) {}
+
+    Array(size_type count) : Buffer<T>{count}
     {
-        for (auto i = 0; i != rhs.capacity_; ++i, ++size_)
-            std::construct_at (this->data_ + i, rhs.data_[i]);
+        for (; size_ != count; ++size_)
+            std::construct_at(data_ + size_, T{});
     }
 
-    Array &operator= (const Array &rhs)
+    Array(size_type count, const value_type &value) : Buffer<T>{count}
     {
+        for (; size_ != count; ++size_)
+            std::construct_at(data_ + size_, value);
+    }
+
+    Array(const Array &rhs) : Buffer<T>{rhs.capacity_} {
+        for (; size_ != capacity_; ++size_)
+            std::construct_at(data_ + size_, rhs.data_[size_]);
+    }
+
+    Array &operator=(const Array &rhs) {
         Array tmp{rhs};
-        std::swap (*this, tmp);
-
+        swap(tmp);
         return *this;
     }
 
-    ~Array ()
-    {
-        std::destroy (this->data_, this->data_ + size_);
-    }
+    const T *data() const noexcept { return data_; }
+    T *data() noexcept { return data_; }
 
-    Array (Array &&rhs) = default;
-    Array &operator= (Array &&rhs) = default;
+    size_type size() const noexcept { return size_; }
 
-    size_type size () const { return this->capacity_; }
+    iterator begin() noexcept { return data_; }
+    const_iterator begin() const noexcept { return data_; }
+    const_iterator cbegin() const noexcept { return begin(); }
 
-    const T *data () const & { return this->data_; }
-    T *data () & { return this->data_; }
+    iterator end() noexcept { return data_ + size_; }
+    const_iterator end() const noexcept { return data_ + size_; }
+    const_iterator cend() const noexcept { end(); }
 
-    const T &operator[] (size_type i) const & { return this->data_[i]; }
-    T &operator[] (size_type i) & { return this->data_[i]; }
+    reverse_iterator rbegin() noexcept { return reverse_iterator{begin()}; }
+    const_reverse_iterator rbegin() const noexcept { return std::reverse_iterator{begin()}; }
+    const_reverse_iterator crbegin() const noexcept { return rbegin(); }
 
-    iterator begin () { return iterator{data()}; }
-    const_iterator begin () const { return const_iterator{data()}; }
-    const_iterator cbegin () const { return begin(); }
-
-    iterator end () { return iterator{data() + size()}; }
-    const_iterator end () const { return const_iterator{data() + size()}; }
-    const_iterator cend () const { return end(); }
+    reverse_iterator rend() noexcept { return reverse_iterator{end()}; }
+    const_iterator rend() const noexcept { return reverse_iterator{end()}; }
+    const_iterator crend() const noexcept { rend(); }
 };
 
 } // namespace yLab
